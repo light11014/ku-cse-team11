@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 import time
 import re
+import csv
 
 def setup_chrome_options():
     """Chrome 옵션 설정 - 경고 메시지 최소화"""
@@ -53,58 +54,74 @@ def crawl_individual_novels(driver, novel_list):
                 print(f" 작가 추출 실패: {str(e)}")
                 author = "N/A"
                 
-            # 2. 조회수, 추천수 추출
+            # 3. 조회수, 추천수 추출
             try:
-                view_element = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[6]/div[1]/div[2]/div[5]/div[1]')))
-                view = view_element.text
-                if "조회" in view and "추천" in view:
-                    data_list = view.split()
-                    view = re.sub(r'[^0-9,]', '', data_list[0]).replace(',', '')
-                    recommend = re.sub(r'[^0-9,]', '', data_list[1]).replace(',', '')
-                else:
-                    view_element = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[6]/div[1]/div[2]/div[4]/div[1]')))
-                    view = view_element.text
+                line_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'counter-line-a')))
+                line = line_element.text
 
-                    data_list = view.split()
-
-                    view = re.sub(r'[^0-9,]', '', data_list[0]).replace(',', '')
-                    recommend = re.sub(r'[^0-9,]', '', data_list[1]).replace(',', '')
+                view = line.split()[0][2:]
+                recommend = line.split()[1][2:]
 
             except Exception as e:
                 print(f" 조회수, 추천수 추출 실패: {str(e)}")
                 view = "N/A"
                 recommend = "N/A"
         
-            # 2. 태그 추출
+            # 4. 태그 추출
             try:
-                tag_element = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[6]/div[1]/div[2]/div[5]/div[1]/p[1]')))
+                tag_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'writer-tag')))
                 tag = tag_element.text
-                if "조회" in tag in tag:
-                    tag_element = wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[6]/div[1]/div[2]/div[6]/div[1]/p[1]')))
-                    tag = tag_element.text
-                tag = tag.split("\n#")
             except Exception as e:
                 print(f" 태그 추출 실패: {str(e)}")
                 tag = "N/A"
-        
+            
             # ... 이하 모든 요소에 대해 동일하게 적용
             # description, views, recommendations, episodes
             # ...
 
+            # 5. 소개글 추출
+            try:
+                synopsis_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'synopsis')))
+                synopsis = synopsis_element.text
+
+            except Exception as e:
+                print(f" 소개글 추출 실패: {str(e)}")
+                synopsis = "N/A"
+
+            # 6. 회차 추출
+            try:
+                count_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'info-count2')))
+                count = count_element.text.splitlines()[2].replace('회차',"").replace('회차', "")
+            except Exception as e:
+                print(f" 회차 추출 실패: {str(e)}")
+                count = "N/A"
+            
+            # 7. 이미지 추출
+            try:
+                img_element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.cover_img.s_inv')))
+                img = img_element.get_attribute("src")
+            except Exception as e:
+                print(f" 회차 추출 실패: {str(e)}")
+                img = "N/A"
+
             novel_info = {
-                "id": novel_id,
+                "url": novel_url,
                 "title": title,
                 "author": author,
                 "view" : view,
                 "recommend" : recommend,
                 "tag" : tag,
+                "synopsis" : synopsis,
+                "count" : count,
+                "img" : img
             }
             scraped_data.append(novel_info)
             print(novel_info)
         except Exception as e:
             print(f" 작품 ID {novel_id} 크롤링 중 치명적인 오류 발생: {str(e)}")
             continue
-                
+            
+            #
     print("\n" + "=" * 80)
     print("Individual Novel Page Crawling Complete!")
     print("=" * 80)
@@ -147,6 +164,19 @@ def main():
         for item in final_scraped_data:
             print(item)
         
+        if final_scraped_data:
+            csv_file = 'novel_data.csv'
+            csv_columns = final_scraped_data[0].keys()
+            
+            with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=csv_columns)
+                writer.writeheader()
+                for data in final_scraped_data:
+                    writer.writerow(data)
+            print(f"\n 데이터가 {csv_file} 파일로 성공적으로 저장되었습니다.")
+        else:
+            print("\n 저장할 데이터가 없습니다.")
+
     except Exception as e:
         print(f" 에러 발생: {str(e)}")
         

@@ -44,7 +44,7 @@ def crawl_individual_novels(driver, novel_list):
                 title = "N/A"
             
             try:
-                author_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "member-trigger")))
+                author_element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "meta-author")))
                 author = author_element.text
             except Exception as e :
                 print(f"작가 추출 실패 : {str(e)}")
@@ -82,7 +82,7 @@ def crawl_individual_novels(driver, novel_list):
                 img_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="board"]/div[1]/div[1]/img')))
                 img = img_element.get_attribute("src")
             except Exception as e:
-                print(f"❌ 태그 정보 추출 실패: {str(e)}")
+                print(f"❌ 이미지 정보 추출 실패: {str(e)}")
 
             novel_info = {
                 "id" : url,
@@ -97,10 +97,12 @@ def crawl_individual_novels(driver, novel_list):
             }
 
             print(novel_info)
+
+            scraped_data.append(novel_info)
         except Exception as e:
             print("오류")
             continue
-    
+            
     return scraped_data
 def main():
     MoonpiaURL = "https://www.munpia.com/page/j/view/w/best/plsa.eachtoday?displayType="

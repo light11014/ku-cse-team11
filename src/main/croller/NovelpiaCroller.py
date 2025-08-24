@@ -128,7 +128,7 @@ def crawl_individual_novels(driver, novel_list):
     return scraped_data
 
 def main():
-    NovelpiaURL = "https://novelpia.com/top100/all/today/view/all/all?main_genre="
+    NovelpiaURL = "https://novelpia.com/top100#more700"
     
     options = setup_chrome_options()
     driver = webdriver.Chrome(options=options)
@@ -165,7 +165,7 @@ def main():
             print(item)
         
         if final_scraped_data:
-            csv_file = 'novel_data.csv'
+            csv_file = 'novel_data_remote.csv'
             csv_columns = final_scraped_data[0].keys()
             
             with open(csv_file, 'w', newline='', encoding='utf-8') as f:

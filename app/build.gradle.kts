@@ -19,8 +19,15 @@ android {
     }
 
     buildTypes {
+        debug {
+            // 디버그: 기본은 Fake 사용
+            buildConfigField("boolean", "USE_FAKE_COMMUNITY", "true")
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            buildConfigField("boolean", "USE_FAKE_COMMUNITY", "false")
+            buildConfigField("String", "BASE_URL", "\"https://api.yourdomain.com/\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -36,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -52,6 +60,8 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit2.kotlinx.serialization.converter)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -61,7 +71,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.runtime)
     implementation(libs.ui)
-    implementation(libs.androidx.compose.bom.v20240800)
+    implementation(platform(libs.androidx.compose.bom.v20240800))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

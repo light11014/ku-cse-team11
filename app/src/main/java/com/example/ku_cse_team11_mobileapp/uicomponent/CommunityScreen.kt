@@ -5,79 +5,76 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.listSaver
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
-data class ChatMessage(
-    val id: String,
-    val author: String,
-    val text: String,
-    val timestamp: Long
-)
-
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ku_cse_team11_mobileapp.model.community.CommunityViewModel
+import com.example.ku_cse_team11_mobileapp.model.community.CommunityViewModelFactory
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityScreen(
-    nodeId: Long,         // 방 식별
-    title: String         // 상단에는 제목만 노출
+    nodeId: Long,
+    title: String
 ) {
-    // 방별로 독립 상태 유지 (nodeId 를 key 로 사용)
-    var input by rememberSaveable(nodeId) { mutableStateOf("") }
-    var messages by rememberSaveable(nodeId, stateSaver = listSaver(
-        save = { list -> list.flatMap { listOf(it.id, it.author, it.text, it.timestamp.toString()) } },
-        restore = { flat ->
-            flat.chunked(4).map {
-                ChatMessage(it[0], it[1], it[2], it[3].toLong())
-            }
-        }
-    )) {
-        mutableStateOf(
-            listOf(
-                ChatMessage("welcome-$nodeId", "운영자", "‘$title’ 커뮤니티에 오신 것을 환영합니다!", System.currentTimeMillis())
-            )
-        )
-    }
+    val ctx = LocalContext.current
+    val vm: CommunityViewModel = viewModel(
+        factory = CommunityViewModelFactory(nodeId, ctx)
+    )
 
-    fun send(text: String) {
-        val trimmed = text.trim()
-        if (trimmed.isEmpty()) return
-        val newMsg = ChatMessage(
-            id = System.nanoTime().toString(),
-            author = "나",
-            text = trimmed,
-            timestamp = System.currentTimeMillis()
-        )
-        messages = messages + newMsg
-    }
+    var input by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) { vm.loadPosts() }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(title) }) },
+        topBar = { TopAppBar(title = { Text("$title 커뮤니티") }) },
         bottomBar = {
-            Row(Modifier.fillMaxWidth().padding(8.dp)) {
+            Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
-                    modifier = Modifier.weight(1f),
                     value = input,
                     onValueChange = { input = it },
-                    placeholder = { Text("메시지를 입력하세요") },
-                    singleLine = true
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("새 글을 입력하세요") }
                 )
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { send(input); input = "" }) { Text("전송") }
+                Button(onClick = {
+                    if (input.isNotBlank()) {
+                        vm.addPost(author = "me", content = input)
+                        input = ""
+                    }
+                }) { Text("등록") }
             }
         }
     ) { inner ->
-        LazyColumn(
-            modifier = Modifier.padding(inner).fillMaxSize(),
-            contentPadding = PaddingValues(12.dp)
-        ) {
-            items(messages, key = { it.id }) { msg ->
-                Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                    Text(msg.author, style = MaterialTheme.typography.labelMedium)
-                    Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 2.dp) {
-                        Text(msg.text, modifier = Modifier.padding(10.dp))
+        when {
+            vm.isLoading && vm.posts.isEmpty() -> {
+                Box(Modifier.padding(inner).fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            vm.error != null && vm.posts.isEmpty() -> {
+                Box(Modifier.padding(inner).fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("불러오기에 실패했습니다: ${vm.error}")
+                }
+            }
+            else -> {
+                LazyColumn(Modifier.padding(inner).fillMaxSize()) {
+                    items(vm.posts, key = { it.id }) { post ->
+                        Card(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+                            Column(Modifier.padding(12.dp)) {
+                                Text(post.author, style = MaterialTheme.typography.labelMedium)
+                                Spacer(Modifier.height(4.dp))
+                                Text(post.content, style = MaterialTheme.typography.bodyMedium)
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    post.createdAt,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
+                        }
                     }
                 }
             }

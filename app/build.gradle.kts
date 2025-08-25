@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.androidx.runtime)
     implementation(libs.ui)
     implementation(platform(libs.androidx.compose.bom.v20240800))
+    implementation(libs.androidx.animation.core.lint)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

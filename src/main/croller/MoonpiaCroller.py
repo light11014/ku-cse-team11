@@ -105,7 +105,7 @@ def crawl_individual_novels(driver, novel_list):
             
     return scraped_data
 def main():
-    MoonpiaURL = "https://www.munpia.com/page/j/view/w/best/plsa.eachtoday?displayType="
+    MoonpiaURL = "https://www.munpia.com/page/j/view/w/best/golden?displayType=GRID"
     
     options = setup_chrome_options()
     driver = webdriver.Chrome(options=options)

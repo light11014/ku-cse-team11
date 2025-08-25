@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://rankhub-database.cxeecquwuy0s.ap-northeast-2.rds.amazonaws.com:3306/rankhub_db?serverTimezone=Asia/Seoul
+    url: jdbc:mysql:/rankhub_db?serverTimezone=Asia/Seoul
     username: admin
     password: rankhubpw
 

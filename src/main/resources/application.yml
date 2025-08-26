@@ -1,9 +1,9 @@
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql:/rankhub_db?serverTimezone=Asia/Seoul
-    username: admin
-    password: rankhubpw
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://ep-nameless-river-a1iotqh1-pooler.ap-southeast-1.aws.neon.tech:5432/neondb?sslmode=require&channelBinding=require
+    username: neondb_owner
+    password: npg_vtAWlQY9ZR7r
 
   jpa:
     hibernate:
@@ -12,4 +12,4 @@ spring:
       hibernate:
         show_sql: true   # 실행된 SQL 콘솔 출력
         format_sql: true # SQL 보기 좋게 포맷
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

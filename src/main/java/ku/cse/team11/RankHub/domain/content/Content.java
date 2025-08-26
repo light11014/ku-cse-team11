@@ -1,4 +1,4 @@
-package ku.cse.team11.RankHub.domain;
+package ku.cse.team11.RankHub.domain.content;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -22,11 +22,11 @@ public class Content {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String author;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private ContentType type;
 
     @Column(length = 2000)

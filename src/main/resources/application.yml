@@ -1,9 +1,12 @@
 spring:
+  config:
+    import: optional:classpath:properties/env.properties
+
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://ep-nameless-river-a1iotqh1-pooler.ap-southeast-1.aws.neon.tech:5432/neondb?sslmode=require&channelBinding=require
-    username: neondb_owner
-    password: npg_vtAWlQY9ZR7r
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:

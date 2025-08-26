@@ -36,3 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 src/main/resources/env.properties
+
+### DB 설정 ###
+src/main/resources/properties/env.properties

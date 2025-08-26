@@ -6,13 +6,39 @@ import pandas as pd
 # === PostgreSQL 연결 ===
 try:
     conn = psycopg2.connect(
-        host="localhost",        # 보통 localhost
-        dbname="rankhub_db",     # DB 이름
-        user="postgres",         # PostgreSQL 계정 (보통 postgres)
-        password="root",         # 설치 시 지정한 비밀번호
-        port=5432                # 기본 포트
+        host="ep-nameless-river-a1iotqh1-pooler.ap-southeast-1.aws.neon.tech",  # Neon 호스트
+        dbname="neondb",              # 기본 DB 이름
+        user="neondb_owner",          # Neon 계정 이름
+        password="npg_6gqah9QuvHzo",           # Neon에서 발급받은 비밀번호
+        port=5432,                    # 기본 포트
+        sslmode="require"             # SSL 필수 (Neon은 SSL 없으면 접속 불가)
     )
     cursor = conn.cursor()
+
+    # === content 테이블 없으면 생성 ===
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS content (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        authors TEXT,
+        description TEXT,
+        thumbnail_url TEXT,
+        content_url TEXT,
+        total_episodes INTEGER,
+        tags TEXT,
+        category TEXT,
+        age_rating TEXT,
+        pub_period TEXT,
+        views BIGINT,
+        likes BIGINT,
+        rating DOUBLE PRECISION,
+        rating_sum BIGINT,
+        rating_count BIGINT,
+        platform TEXT,
+        content_type TEXT
+    )
+    """)
+    conn.commit()
 
     # === CSV 컬럼 → DB 컬럼 매핑 규칙 ===
     COLUMN_MAPPING = {

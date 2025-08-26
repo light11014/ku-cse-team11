@@ -6,10 +6,10 @@ import pandas as pd
 # === PostgreSQL 연결 ===
 try:
     conn = psycopg2.connect(
-        host="ep-nameless-river-a1iotqh1-pooler.ap-southeast-1.aws.neon.tech",  # Neon 호스트
+        host="",  # Neon 호스트
         dbname="neondb",              # 기본 DB 이름
         user="neondb_owner",          # Neon 계정 이름
-        password="npg_EQ7vBy8YUHow",           # Neon에서 발급받은 비밀번호
+        password="",           # Neon에서 발급받은 비밀번호
         port=5432,                    # 기본 포트
         sslmode="require"             # SSL 필수 (Neon은 SSL 없으면 접속 불가)
     )
@@ -31,11 +31,12 @@ try:
         pub_period TEXT,
         views BIGINT,
         likes BIGINT,
-        rating DOUBLE PRECISION,
         rating_sum BIGINT,
         rating_count BIGINT,
         platform TEXT,
-        content_type TEXT
+        content_type TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP          
     )
     """)
     conn.commit()
@@ -143,7 +144,6 @@ try:
             "pub_period": None,
             "views": 0,
             "likes": 0,
-            "rating": 0.0,
             "rating_sum": 0,
             "rating_count": 0,
             "platform": platform,

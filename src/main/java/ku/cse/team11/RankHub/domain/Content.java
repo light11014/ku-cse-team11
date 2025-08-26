@@ -29,7 +29,7 @@ public class Content {
     @Column(nullable = false)
     private ContentType contentType;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -41,19 +41,17 @@ public class Content {
     @Column(nullable = false)
     private String contentUrl;
 
-    private Integer episodeCount;
-
-    @Enumerated(EnumType.STRING)
-    private ContentStatus contentStatus;
+    private Integer totalEpisodes;
 
     // 초기만 문자열
+    @Column(columnDefinition = "TEXT")
     private String tags;
 
     private String category;
 
     private String ageRating;
 
-    private String updateFrequency;
+    private String pubPeriod;
 
     // 통계
     private Long views = 0L;

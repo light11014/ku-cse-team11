@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Getter
 public class Content {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     // 기본 정보
@@ -23,13 +23,13 @@ public class Content {
     private String title;
 
     @Column(nullable = false)
-    private String author;
+    private String authors;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ContentType type;
+    private ContentType contentType;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -41,21 +41,17 @@ public class Content {
     @Column(nullable = false)
     private String contentUrl;
 
-    private LocalDate publishDate;      // 연재 시작일
-
-    private Integer episodeCount;
-
-    @Enumerated(EnumType.STRING)
-    private ContentStatus contentStatus;
+    private Integer totalEpisodes;
 
     // 초기만 문자열
+    @Column(columnDefinition = "TEXT")
     private String tags;
 
-    private String genre;
+    private String category;
 
     private String ageRating;
 
-    private String updateFrequency;
+    private String pubPeriod;
 
     // 통계
     private Long views = 0L;

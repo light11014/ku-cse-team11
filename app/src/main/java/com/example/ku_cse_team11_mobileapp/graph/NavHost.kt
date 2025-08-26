@@ -12,9 +12,7 @@ import com.example.ku_cse_team11_mobileapp.model.CreateNode
 import com.example.ku_cse_team11_mobileapp.model.FavoriteStore
 import com.example.ku_cse_team11_mobileapp.uicomponent.CommunityScreen
 import com.example.ku_cse_team11_mobileapp.uicomponent.DetailScreen
-import com.example.ku_cse_team11_mobileapp.uicomponent.LoginScreen
 import com.example.ku_cse_team11_mobileapp.uicomponent.NodeList
-import com.example.ku_cse_team11_mobileapp.uicomponent.SignUpScreen
 import kotlinx.coroutines.launch
 
 @Composable
@@ -46,18 +44,7 @@ fun NavHost(initialNodes: List<CreateNode>) {
                 onSearchClick = { nav.navigate(Screen.Search.route) }
             )
         }
-        composable(Screen.Login.route) {
-            LoginScreen(
-                onLoggedIn = { nav.navigate(Screen.NodeList.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
-                onNavigateSignUp = { nav.navigate(Screen.SignUp.route) }
-            )
-        }
-        composable(Screen.SignUp.route) {
-            SignUpScreen(
-                onBack = { nav.navigateUp() },
-                onRegistered = { nav.navigate(Screen.NodeList.route) { popUpTo(Screen.Login.route) { inclusive = true } } }
-            )
-        }
+
         composable(Screen.Search.route) {
             SearchScreen(
                 nodes = nodes,

@@ -6,10 +6,10 @@ import pandas as pd
 # === PostgreSQL 연결 ===
 try:
     conn = psycopg2.connect(
-        host="",  # Neon 호스트
+        host="ep-nameless-river-a1iotqh1-pooler.ap-southeast-1.aws.neon.tech",  # Neon 호스트
         dbname="neondb",              # 기본 DB 이름
         user="neondb_owner",          # Neon 계정 이름
-        password="",           # Neon에서 발급받은 비밀번호
+        password="npg_EQ7vBy8YUHow",           # Neon에서 발급받은 비밀번호
         port=5432,                    # 기본 포트
         sslmode="require"             # SSL 필수 (Neon은 SSL 없으면 접속 불가)
     )

@@ -2,6 +2,8 @@ import os
 import csv
 import psycopg2
 import pandas as pd
+from langdetect import detect, DetectorFactory
+DetectorFactory.seed = 0  # 결과 일관성
 
 # === PostgreSQL 연결 ===
 try:
@@ -35,6 +37,7 @@ try:
         rating_count BIGINT,
         platform TEXT,
         content_type TEXT,
+        language TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP          
     )
@@ -81,9 +84,6 @@ try:
         # 좋아요 수(likes), 추천 수
         "likes": "likes", "recommend": "likes",
 
-        # 평점(rating)
-        "rating": "rating",
-
         # 카카오페이지 평점 관련
         "ratingSum": "rating_sum", "ratingCount": "rating_count"
     }
@@ -103,6 +103,8 @@ try:
             platform = "MUNPIA"
         elif "novelpia" in name:
             platform = "NOVELPIA"
+        elif "novel_data_webnovel" in name:
+            platform = "WEBNOVEL"
 
         if "webtoon" in name or "웹툰" in name:
             content_type = "WEBTOON"
@@ -128,6 +130,12 @@ try:
             return int(float(s))
         except ValueError:
             return 0
+    
+    def detect_language(text: str) -> str:
+        try:
+            return detect(text)
+        except:
+            return "UNKNOWN"
 
     # === DB 저장 함수 ===
     def insert_entity(row: dict, platform: str, content_type: str):
@@ -148,6 +156,7 @@ try:
             "rating_count": 0,
             "platform": platform,
             "content_type": content_type,
+            "language" : None
         }
 
         # 컬럼 매핑
@@ -169,21 +178,24 @@ try:
         mapped["rating_sum"] = parse_korean_number(mapped["rating_sum"])
         mapped["rating_count"] = parse_korean_number(mapped["rating_count"])
 
+        # 언어 매핑
+        mapped["language"] = detect_language(mapped["description"])
+
         # SQL 실행
         sql = """
         INSERT INTO content
         (title, authors, description, thumbnail_url, content_url,
          total_episodes, tags, category, age_rating, pub_period,
-         views, likes, rating, rating_sum, rating_count,
-         platform, content_type)
+         views, likes, rating_sum, rating_count,
+         platform, content_type, language)
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """
         cursor.execute(sql, (
             mapped["title"], mapped["authors"], mapped["description"], mapped["thumbnail_url"],
             mapped["content_url"], mapped["total_episodes"], mapped["tags"], mapped["category"],
             mapped["age_rating"], mapped["pub_period"], mapped["views"], mapped["likes"],
-            mapped["rating"], mapped["rating_sum"], mapped["rating_count"],
-            mapped["platform"], mapped["content_type"]
+            mapped["rating_sum"], mapped["rating_count"],
+            mapped["platform"], mapped["content_type"], mapped["language"]
         ))
 
     # === CSV 읽고 저장 ===

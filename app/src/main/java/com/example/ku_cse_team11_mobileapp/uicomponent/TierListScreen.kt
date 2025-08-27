@@ -1,122 +1,69 @@
 package com.example.ku_cse_team11_mobileapp.uicomponent
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import com.example.ku_cse_team11_mobileapp.model.CreateNode
-import com.example.ku_cse_team11_mobileapp.model.Tier
-import com.example.ku_cse_team11_mobileapp.model.TierStore
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.saveable.rememberSaveable
 
-@OptIn(ExperimentalMaterial3Api::class)
+enum class Tier(val label: String) { S("S"), F("F"), UNKNOWN("Unknown") }
+
 @Composable
-fun TierListScreen(
-    node: CreateNode,
-    selected: Tier?,
-    onBack: () -> Unit,
-    onConfirm: (Tier) -> Unit // 저장 후 돌아갈 때 외부에 알려주고 싶으면 유지
+fun TierSelector(
+    contentId: Int,
+    modifier: Modifier = Modifier,
+    initial: Tier = Tier.UNKNOWN,
+    onChanged: (Tier) -> Unit = {}     // 나중에 API 저장 연결용
 ) {
-    var tier by remember { mutableStateOf(selected ?: Tier.A) }
-    val ctx = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val snackbar = remember { SnackbarHostState() }
+    // 재조립/회전까지 유지(앱 재시작시엔 초기화됨)
+    var tierName by rememberSaveable(contentId) { mutableStateOf(initial.name) }
+    val tier = remember(tierName) { Tier.valueOf(tierName) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("티어리스트") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "뒤로")
-                    }
-                }
-            )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbar) },
-        bottomBar = {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    modifier = Modifier.weight(1f),
-                    onClick = onBack
-                ) { Text("취소") }
-                Button(
-                    modifier = Modifier.weight(1f),
+    Column(modifier = modifier) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Tier.values().forEach { t ->
+                FilterChip(
+                    selected = (t == tier),
                     onClick = {
-                        // ★ TierStore에 영구 저장
-                        scope.launch {
-                            TierStore.setTier(ctx, node.id, tier)
-                            snackbar.showSnackbar("‘${node.title}’ ${tier.name} 티어로 저장했어요")
-                            onConfirm(tier) // 외부에도 알림(필요 없으면 제거 가능)
-                        }
+                        tierName = t.name
+                        onChanged(t)  // 훗날 서버 저장 호출만 연결
+                    },
+                    label = { Text(t.label) },
+                    leadingIcon = {
+                        Box(
+                            Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(colorForTier(t))
+                        )
                     }
-                ) { Text("확인") }
-            }
-        }
-    ) { inner ->
-        Column(
-            Modifier
-                .padding(inner)
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // --- 작품 요약 ---
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                AsyncImage(
-                    model = node.thumbnailUrl,
-                    contentDescription = "${node.title} 표지",
-                    modifier = Modifier.size(96.dp)
                 )
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        node.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text("저자: ${node.author}", style = MaterialTheme.typography.bodyMedium)
-                }
             }
-
-            // --- S~F 2열 그리드 ---
-            val items = listOf(Tier.S, Tier.A, Tier.B, Tier.C, Tier.D, Tier.E, Tier.F)
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 200.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                userScrollEnabled = false
-            ) {
-                items(items, key = { it.name }) { item ->
-                    FilterChip(
-                        selected = tier == item,
-                        onClick = { tier = item },
-                        label = { Text(item.name) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            AssistChip(
-                onClick = {},
-                label = { Text("현재 선택: ${tier.name}") }
-            )
         }
+        Spacer(Modifier.height(10.dp))
+        AssistChip(
+            onClick = {},
+            label = { Text("현재 선택: ${tier.label}") },
+            leadingIcon = {
+                Box(
+                    Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(colorForTier(tier))
+                )
+            }
+        )
     }
+}
+
+@Composable
+private fun colorForTier(t: Tier): Color = when (t) {
+    Tier.S -> Color(0xFF2ECC71)      // 그린
+    Tier.F -> Color(0xFFE74C3C)      // 레드
+    Tier.UNKNOWN -> Color(0xFF95A5A6) // 그레이
 }

@@ -19,12 +19,17 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
         }
     }
 
@@ -37,6 +42,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -46,6 +52,9 @@ configurations.all {
 }
 
 dependencies {
+
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.logging.interceptor)
     // Core & Lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -78,6 +87,14 @@ dependencies {
 
     // ProfileInstaller 내부에서 필요 → concurrent-futures 명시
     implementation(libs.androidx.concurrent.futures.ktx)
+    implementation(libs.material3)
+    implementation(libs.androidx.browser)
+
+    //gson
+    implementation(libs.gson)
+    implementation(libs.converter.gson)
+    implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.animation.core.lint)
 
     // Test
     testImplementation(libs.junit)

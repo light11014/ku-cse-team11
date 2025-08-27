@@ -56,8 +56,6 @@ public class Content {
     // 통계
     private Long views = 0L;
 
-    private Double rating = 0.0;
-
     private Long likes = 0L;
 
     @CreationTimestamp

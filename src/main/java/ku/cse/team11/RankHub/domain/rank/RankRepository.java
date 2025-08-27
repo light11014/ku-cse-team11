@@ -59,7 +59,7 @@ public interface RankRepository extends JpaRepository<Rank, Long> {
                content_type,
                platform,
                CASE
-                   WHEN platform = 'NAVER_WEBTOON' THEN likes * 500
+                   WHEN platform = 'NAVER_WEBTOON' THEN likes * 150
                    ELSE views
                END AS calc_views,
                RANK() OVER (PARTITION BY content_type ORDER BY

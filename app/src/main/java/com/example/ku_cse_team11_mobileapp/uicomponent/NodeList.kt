@@ -18,11 +18,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import com.example.ku_cse_team11_mobileapp.graph.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +37,9 @@ fun NodeList(
     onToggleFavorite: (Long) -> Unit,
     onNodeClick: (CreateNode) -> Unit,
     onSearchClick: () -> Unit,
-    onLoadMore: (() -> Unit)? = null
+    onLoadMore: (() -> Unit)? = null,
+    onOpenTierList: () -> Unit, // ★ 추가,
+    onOpenMyList: () -> Unit // ★ 추가
 ) {
     // 탭: [전체], [즐겨찾기], + 플랫폼들
     val platforms = remember { Platform.entries }
@@ -62,6 +69,12 @@ fun NodeList(
             actions = {
                 IconButton(onClick = onSearchClick) {
                     Icon(Icons.Outlined.Search, contentDescription = "검색")
+                }
+                IconButton(onClick = onOpenTierList) {
+                    Icon(Icons.Outlined.DateRange, contentDescription = "티어리스트")
+                }
+                IconButton(onClick = {onOpenMyList()}) {
+                    Icon(Icons.Outlined.Person, contentDescription = "마이리스트")
                 }
             }
         )

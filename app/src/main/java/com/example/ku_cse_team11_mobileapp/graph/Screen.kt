@@ -11,4 +11,11 @@ sealed class Screen(val route: String) {
         fun route(id: Long, title: String) = "community/$id/${Uri.encode(title)}"
     }
     data object Search : Screen("search")
+
+    data object TierRandom : Screen("tier_random")
+    data object Tier : Screen("tier/{id}") {
+        fun route(id: Long) = "tier/$id"
+    }
+
+    data object MyList : Screen("my_list") // ★ 추가
 }

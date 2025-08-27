@@ -1,9 +1,11 @@
 package ku.cse.team11.RankHub.domain.search;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ku.cse.team11.RankHub.domain.content.Content;
 import ku.cse.team11.RankHub.domain.content.ContentRepository;
 import ku.cse.team11.RankHub.domain.content.ContentType;
 import ku.cse.team11.RankHub.domain.content.Platform;
+import ku.cse.team11.RankHub.domain.translation.TranslateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,16 +18,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class SearchService{
 
     private final ContentRepository contentRepository;
+    private final TranslateService translateService;
 
     @Transactional(readOnly = true)
-    public Page<Content> search(
+    public Page<ObjectNode> search(
             String keyword,
             ContentType contentType,
             Platform platform,
             Integer minEpisode,
             Integer maxEpisode,
             int page,
-            int size
+            int size,
+            String targetLang
     ) {
         String kw = (keyword == null) ? null : keyword.trim();
         if (kw != null && !kw.isEmpty() && kw.length() < 2) {
@@ -41,14 +45,13 @@ public class SearchService{
             minEpisode = maxEpisode;
             maxEpisode = tmp;
         }
-
-        return contentRepository.search(
+        Page<Content> search = contentRepository.search(
                 kw,
                 contentType,
                 platform,
                 minEpisode,
                 maxEpisode,
-                PageRequest.of(page, size)
-        );
+                PageRequest.of(page, size));
+        return translateService.translateSearchPage(search, targetLang);
     }
 }

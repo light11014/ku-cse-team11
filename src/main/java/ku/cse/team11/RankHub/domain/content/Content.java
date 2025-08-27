@@ -2,6 +2,7 @@ package ku.cse.team11.RankHub.domain.content;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Getter
+@Data
 public class Content {
     @Id
     // @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,7 @@
 package ku.cse.team11.RankHub.controller;
 
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ku.cse.team11.RankHub.domain.content.Content;
 import ku.cse.team11.RankHub.domain.content.ContentType;
 import ku.cse.team11.RankHub.domain.content.Platform;
@@ -34,11 +35,13 @@ public class SearchController {
             @RequestParam(required = false) Integer minEpisode,
             @RequestParam(required = false) Integer maxEpisode,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String lang
+
     ) {
         try{
-            Page<Content> results = searchService.search(
-                    keyword, contentType, platform, minEpisode, maxEpisode, page, size
+            Page<ObjectNode> results = searchService.search(
+                    keyword, contentType, platform, minEpisode, maxEpisode, page, size,lang
             );
             return ResponseEntity.ok(results);
         }catch(Exception e){

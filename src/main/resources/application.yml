@@ -16,3 +16,8 @@ spring:
         show_sql: true   # 실행된 SQL 콘솔 출력
         format_sql: true # SQL 보기 좋게 포맷
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+app:
+  google:
+    project-id: fluted-reporter-449910-f0
+    location: global   # 필요 시 us-central1 등
+    credentials-path: ${GOOGLE_APPLICATION_CREDENTIALS}

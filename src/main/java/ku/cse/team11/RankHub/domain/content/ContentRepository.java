@@ -55,4 +55,16 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
     """, nativeQuery = true)
     List<Object[]> findContentsWithTier(@Param("contentType") String contentType);
 
+    @Query(value = """
+        SELECT c.id, c.title, c.authors, c.thumbnail_url, c.platform,
+               c.views, c.likes, c.language, ts.avg_tier AS tier
+        FROM content c
+        JOIN tier_stats ts ON c.id = ts.content_id
+        WHERE c.content_type = :contentType
+          AND c.platform = :platform
+        ORDER BY ts.avg_score DESC
+    """, nativeQuery = true)
+    List<Object[]> findContentsWithTierAndPlatform(@Param("contentType") String contentType,
+                                                   @Param("platform") String platform);
+
 }

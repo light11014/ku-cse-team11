@@ -1,9 +1,6 @@
 package ku.cse.team11.RankHub.controller;
 
-import ku.cse.team11.RankHub.domain.content.Content;
-import ku.cse.team11.RankHub.domain.content.ContentRepository;
-import ku.cse.team11.RankHub.domain.content.ContentService;
-import ku.cse.team11.RankHub.domain.content.ContentType;
+import ku.cse.team11.RankHub.domain.content.*;
 import ku.cse.team11.RankHub.domain.tier.*;
 import ku.cse.team11.RankHub.domain.translation.TranslateService;
 import ku.cse.team11.RankHub.dto.auth.ContentDetailResponse;
@@ -154,9 +151,15 @@ public class ContentController {
 
     @GetMapping("/sorted")
     public ResponseEntity<List<Map<String, Object>>> getContentsByTier(
-            @RequestParam ContentType contentType
+            @RequestParam ContentType contentType,
+            @RequestParam(required = false) Platform platform
     ) {
-        List<ContentDto> contents = contentService.getContentsByTier(contentType);
+        List<ContentDto> contents;
+        if (platform != null) {
+            contents = contentService.getContentsByTierAndPlatform(contentType, platform);
+        } else {
+            contents = contentService.getContentsByTier(contentType);
+        }
 
         List<Map<String, Object>> response = IntStream.range(0, contents.size())
                 .mapToObj(i -> Map.of(

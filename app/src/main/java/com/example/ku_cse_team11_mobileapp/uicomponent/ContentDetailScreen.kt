@@ -256,7 +256,7 @@ fun ContentDetailScreen(
                                 rating = displayRating,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(160.dp)
+                                    .height(196.dp)
                                     .padding(top = 8.dp)
                             )
                         }
@@ -343,36 +343,51 @@ private fun TierBarChart(
     val order = listOf("S", "A", "B", "C", "D", "F")
     val data = order.map { it to (rating[it] ?: 0) }
     val max = data.maxOfOrNull { it.second } ?: 0
-    val barAreaHeight = 150.dp
 
-    Column(modifier) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-            verticalAlignment = Alignment.Bottom
-        ) {
-            data.forEach { (tier, count) ->
-                val frac = if (max > 0) (count / max.toFloat()).coerceIn(0f, 1f) else 0f
-                Column(
-                    Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        Modifier.height(barAreaHeight).fillMaxWidth()
+    BoxWithConstraints(modifier) {
+        // 라벨(등급+숫자)와 간격을 위해 확보할 높이
+        val labelSpace = 44.dp
+        // 부모가 높이를 제시하면 그에 맞춰 막대영역 계산, 아니면 기본값 사용
+        val barAreaHeight =
+            if (constraints.hasBoundedHeight)
+                (maxHeight - labelSpace).coerceAtLeast(100.dp)
+            else
+                150.dp
+
+        Column {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                data.forEach { (tier, count) ->
+                    val frac = if (max > 0) (count / max.toFloat()).coerceIn(0f, 1f) else 0f
+                    Column(
+                        Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box(
                             Modifier
+                                .height(barAreaHeight)
                                 .fillMaxWidth()
-                                .fillMaxHeight(frac)
-                                .align(Alignment.BottomCenter)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(barColorForTier(tier))
+                        ) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(frac)
+                                    .align(Alignment.BottomCenter)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(barColorForTier(tier))
+                            )
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(tier, style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            "$count",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Spacer(Modifier.height(1.dp))
-                    Text(tier, style = MaterialTheme.typography.labelMedium)
-                    Text("$count", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

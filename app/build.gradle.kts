@@ -20,7 +20,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+            buildConfigField("String", "BASE_URL", "\"http://old-genevra-color-light-f26ebc9f.koyeb.app/\"")
         }
         release {
             isMinifyEnabled = false
@@ -29,7 +29,7 @@ android {
                 "proguard-rules.pro"
             )
 
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+            buildConfigField("String", "BASE_URL", "\"http://old-genevra-color-light-f26ebc9f.koyeb.app/\"")
         }
     }
 
@@ -52,7 +52,7 @@ configurations.all {
 }
 
 dependencies {
-
+    implementation(libs.accompanist.swiperefresh)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.logging.interceptor)
     // Core & Lifecycle
@@ -95,6 +95,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.animation.core.lint)
+    implementation(libs.androidx.foundation.layout)
 
     // Test
     testImplementation(libs.junit)

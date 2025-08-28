@@ -22,8 +22,8 @@ enum class PlatformTab(
 
     // 웹소설용
     MUNPIA("문피아", "MUNPIA", setOf("WEBNOVEL")),
-    NOVELPIA("노벨피아", "NOVELPIA", setOf("WEBNOVEL"));
-
+    NOVELPIA("노벨피아", "NOVELPIA", setOf("WEBNOVEL")),
+    WEBNOVEL("웹노벨", "WEBNOVEL", setOf("WEBNOVEL"));
     companion object {
         fun tabsFor(contentTypeApi: String): List<PlatformTab> =
             entries.filter { contentTypeApi in it.supports }

@@ -15,19 +15,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.example.ku_cse_team11_mobileapp.api.model.ContentSummary
 import com.example.ku_cse_team11_mobileapp.uicomponent.FavoriteStar
 import com.example.ku_cse_team11_mobileapp.uicomponent.fixUrl
@@ -36,82 +45,112 @@ import com.example.ku_cse_team11_mobileapp.uicomponent.fixUrl
 fun ContentNode(
     content: ContentSummary,
     onClick: (Int) -> Unit,
+    rank: Int? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
-            .width(160.dp) // 작은 카드
+            .width(160.dp)
             .height(220.dp)
             .padding(8.dp)
             .clickable { onClick(content.id) },
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // 썸네일 이미지
+        Box(Modifier.fillMaxSize()) {
+            // 이미지 (crossfade + url 보정)
+            val ctx = LocalContext.current
             AsyncImage(
-                model = fixUrl(content.thumbnailUrl),
+                model = ImageRequest.Builder(ctx)
+                    .data(fixUrl(content.thumbnailUrl))
+                    .crossfade(true)
+                    .build(),
                 contentDescription = content.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            FavoriteStar(
-                contentId = content.id,
+
+            // ✅ 좌측 상단 등수 뱃지 (크게 + 컬러)
+            if (rank != null) {
+                val (bg, fg) = rankBadgeColors(rank)
+                Surface(
+                    color = bg,
+                    contentColor = fg,
+                    shape = RoundedCornerShape(bottomEnd = 12.dp),
+                    tonalElevation = 6.dp,
+                    shadowElevation = 6.dp,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(6.dp)
+                ) {
+                    Text(
+                        text = rank.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            // 하단 스크림(그라데이션)로 글씨 가독성 ↑
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(6.dp)
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .height(70.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            0.4f to Color(0x66000000),
+                            1f to Color(0xCC000000)
+                        )
+                    )
             )
-            // 조회수 & 추천수 (이미지 위에 오른쪽 하단 배치)
+
+            // 조회수/추천수 (오른쪽 하단 오버레이)
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
+                    .padding(bottom = 46.dp, end = 8.dp) // 스크림 위 여백
                     .background(
-                        color = Color.Black.copy(alpha = 0.6f),
-                        shape = RoundedCornerShape(topStart = 8.dp)
+                        color = Color.Black.copy(alpha = 0.55f),
+                        shape = RoundedCornerShape(10.dp)
                     )
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Views",
+                    imageVector = Icons.Default.Visibility,
+                    contentDescription = "조회수",
                     tint = Color.White,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "${content.views / 10000}만",
+                    text = compactCount(content.views),
                     color = Color.White,
                     fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 2.dp, end = 6.dp)
-                )
-                Icon(
-                    imageVector = Icons.Default.ThumbUp,
-                    contentDescription = "Likes",
-                    tint = Color.White,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.padding(start = 4.dp, end = 8.dp)
                 )
             }
 
-            // 제목 & 작가 (아래쪽 배경 살짝 반투명)
+            // 하단: 제목/작가
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .background(Color.Black.copy(alpha = 0.5f))
-                    .padding(6.dp)
+                    .padding(8.dp)
             ) {
                 Text(
                     text = content.title,
                     color = Color.White,
                     fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = content.authors,
-                    color = Color.LightGray,
+                    color = Color(0xFFEEEEEE),
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -120,3 +159,22 @@ fun ContentNode(
         }
     }
 }
+
+@Composable
+@Stable
+private fun rankBadgeColors(rank: Int): Pair<Color, Color> = when (rank) {
+    1 -> Color(0xFFFFD54F) to Color(0xFF5D4037) // Gold bg, dark text
+    2 -> Color(0xFFCFD8DC) to Color(0xFF263238) // Silver bg
+    3 -> Color(0xFFBCAAA4) to Color(0xFF3E2723) // Bronze bg
+    else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+}
+
+private fun compactCount(n: Long): String = when {
+    n < 1_000 -> n.toString()
+    n < 1_000_000 -> String.format("%.1fK", n / 1_000.0)
+    n < 1_000_000_000 -> String.format("%.1fM", n / 1_000_000.0)
+    else -> String.format("%.1fB", n / 1_000_000_000.0)
+}
+
+private fun fixUrl(url: String?): String? =
+    url?.let { if (it.startsWith("//")) "https:$it" else it }

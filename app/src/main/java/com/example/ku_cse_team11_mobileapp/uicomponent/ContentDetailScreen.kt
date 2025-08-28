@@ -1,14 +1,15 @@
 package com.example.ku_cse_team11_mobileapp.uicomponent
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.StarRate
 import androidx.compose.material.icons.filled.ThumbUp
@@ -67,16 +68,20 @@ fun ContentDetailScreen(
     ) { inner ->
         when (val s = state) {
             is ContentDetailViewModel.UiState.Loading ->
-                Box(Modifier
-                    .fillMaxSize()
-                    .padding(inner), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(inner), contentAlignment = Alignment.Center
+                ) {
                     CircularProgressIndicator()
                 }
 
             is ContentDetailViewModel.UiState.Error ->
-                Box(Modifier
-                    .fillMaxSize()
-                    .padding(inner), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(inner), contentAlignment = Alignment.Center
+                ) {
                     Text("오류: ${s.message}")
                 }
 
@@ -84,6 +89,9 @@ fun ContentDetailScreen(
                 val c = s.data
                 val tags = remember(c.tags) { parseTags(c.tags) }
 
+                val favoriteCount by produceState(initialValue = 0, key1 = contentId) {
+                    value = runCatching { repo.getFavoriteCount(contentId) }.getOrDefault(0)
+                }
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -99,8 +107,13 @@ fun ContentDetailScreen(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(220.dp)
+                                .height(440.dp)
                                 .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    val link = c.contentUrl
+                                    val url = fixUrl(link)
+                                    ctx.startActivity(Intent(Intent.ACTION_VIEW, url?.toUri()))
+                                }
                         )
                     }
 
@@ -115,41 +128,78 @@ fun ContentDetailScreen(
                             Spacer(Modifier.height(4.dp))
                             Text(c.authors, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.height(8.dp))
+
+                            val typeKo = koContentType(c.contentType)
+                            val platformKo = koPlatform(c.platform)
+
                             FlowChips(
                                 items = listOfNotNull(
-                                    nb(c.contentType),
-                                    nb(c.platform),
-                                    nb(c.category),
-                                    nb(c.ageRating)?.let { "연령등급: $it" }
+                                    nb(typeKo),
+                                    nb(platformKo),
+                                    nb(c.category)
                                 )
                             )
                         }
                     }
-
+                    item {
+                        val desc = ne(c.description)
+                        if (desc.isNotBlank()) {
+                            SectionCard(title = "설명") {
+                                Text(desc)
+                            }
+                        }
+                    }
                     // 통계 (조회/좋아요/평점)
                     item {
-                        SectionCard(title = "통계") {
-                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                StatChip(Icons.Filled.Visibility, "조회수", formatCount(c.views))
-                                StatChip(Icons.Filled.ThumbUp, "추천수", formatCount(c.likes.toLong()))
-                                StatChip(
-                                    Icons.Filled.StarRate,
-                                    "평점",
-                                    if (c.rating > 0.0) String.format("%.2f", c.rating) else "N/A"
-                                )
+                        val hasStats = (c.views > 0) || (c.likes > 0) || (c.rating > 0.0)
+                        if (hasStats) {
+                            SectionCard(title = "통계") {
+                                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    if (c.views > 0) {
+                                        StatChip(
+                                            Icons.Filled.Visibility,
+                                            "조회수",
+                                            formatCount(c.views)
+                                        )
+                                    }
+                                    if (c.likes > 0) {
+                                        StatChip(
+                                            Icons.Filled.ThumbUp,
+                                            "추천수",
+                                            formatCount(c.likes.toLong())
+                                        )
+                                    }
+                                    if (c.rating > 0.0) {
+                                        StatChip(
+                                            Icons.Filled.StarRate,
+                                            "평점",
+                                            String.format("%.2f", c.rating)
+                                        )
+                                    }
+
+                                    if (favoriteCount > 0) StatChip(
+                                        Icons.Filled.Favorite,
+                                        "즐겨찾기",
+                                        formatCount(favoriteCount.toLong())
+                                    )
+                                }
                             }
                         }
                     }
 
                     // 회차/연재 정보
                     item {
-                        SectionCard(title = "연재 정보") {
-                            val period = ne(c.pubPeriod)
-                            val rows = listOf(
-                                "총 에피소드" to if (c.totalEpisodes > 0) "${c.totalEpisodes}화" else "정보 없음",
-                                "연재 주기" to (period.ifBlank { "정보 없음" })
-                            )
-                            KeyValueRows(rows)
+                        val period = nb(c.pubPeriod)
+                        val hasEpisodes = c.totalEpisodes > 0
+                        val hasPeriod = !period.isNullOrBlank()
+                        if (hasEpisodes || hasPeriod) {
+                            SectionCard(title = "연재 정보") {
+                                val rows = buildList {
+                                    if (hasEpisodes) add("총 에피소드" to "${c.totalEpisodes}화")
+                                    if (hasPeriod) add("연재 주기" to period!!)
+                                }
+                                KeyValueRows(rows)
+                            }
                         }
                     }
 
@@ -158,15 +208,6 @@ fun ContentDetailScreen(
                         item {
                             SectionCard(title = "태그") {
                                 FlowChips(items = tags)
-                            }
-                        }
-                    }
-
-                    val desc = ne(c.description)
-                    if (desc.isNotBlank()) {
-                        item {
-                            SectionCard(title = "설명") {
-                                Text(desc)
                             }
                         }
                     }
@@ -187,17 +228,6 @@ fun ContentDetailScreen(
                         }
                     }
 
-                    // 생성/업데이트 일시
-                    item {
-                        SectionCard(title = "메타데이터") {
-                            val rows = listOf(
-                                "생성일" to formatDate(c.createdAt),
-                                "수정일" to formatDate(c.updatedAt),
-                                "ID" to c.id.toString()
-                            )
-                            KeyValueRows(rows)
-                        }
-                    }
 
                     item {
                         SectionCard(title = "커뮤니티") {
@@ -269,20 +299,6 @@ private fun StatChip(
 }
 
 @Composable
-private fun FlowChips(items: List<String>) {
-    // 간단한 줄바꿈 리스트 (shapes/chips)
-    FlowRowWrap {
-        items.forEach { text ->
-            AssistChip(
-                onClick = {},
-                label = { Text(text) },
-                modifier = Modifier.padding(end = 8.dp, bottom = 8.dp)
-            )
-        }
-    }
-}
-
-@Composable
 private fun KeyValueRows(rows: List<Pair<String, String>>) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         rows.forEach { (k, v) ->
@@ -302,22 +318,36 @@ private fun KeyValueRows(rows: List<Pair<String, String>>) {
 
 @Composable
 private fun FlowRowWrap(content: @Composable () -> Unit) {
-    // Accompanist 없이 간단히: Column 안에 Row를 자동 줄바꿈하는 대신,
-    // Material3의 FlowRow가 없으니 LazyVerticalGrid를 쓰거나,
-    // 여기서는 Row 가로 공간이 넘치더라도 Chip이 줄바꿈 되도록
-    // Column+WrapContentWidth 조합 대신, 간단하게 여러 Row로 잘라 쓰고 싶으면
-    // androidx.compose.foundation.layout.FlowRow 사용하세요 (foundation 1.6+)
-    // 프로젝트가 지원한다면 아래로 교체:
-    // androidx.compose.foundation.layout.FlowRow { content() }
-    Column { content() }
+    Row { content() }
 }
 
-private fun parseTags(tags: String?): List<String> =
-    tags?.split(',', ' ', '·', '|', '/', '#')
-        ?.map { it.trim() }
-        ?.filter { it.isNotBlank() }
-        ?.distinct()
-        ?: emptyList()
+// 기존 parseTags 를 아래로 교체
+private fun parseTags(raw: String?): List<String> {
+    if (raw.isNullOrBlank()) return emptyList()
+
+    // 전체가 "N/A" 류면 바로 비우기
+    val whole = raw.trim()
+    val isWholeNa = whole.equals("N/A", true)
+            || whole.equals("NA", true)
+            || whole.equals("null", true)
+            || whole == "없음"
+    if (isWholeNa) return emptyList()
+
+    // 구분자: , | / · # 개행 등 (공백 하나만으로는 자르지 않음)
+    val tokens = whole.split(Regex("[,|/·#\\r\\n]+"))
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        // 개별 토큰에 섞여 들어온 N/A 류도 제거
+        .filterNot {
+            it.equals("N/A", true) ||
+                    it.equals("NA", true) ||
+                    it.equals("null", true) ||
+                    it == "없음"
+        }
+        .distinct()
+
+    return tokens
+}
 
 private fun formatCount(n: Long): String {
     return when {
@@ -347,3 +377,36 @@ private fun nb(value: Any?): String? {
 
 /** String? 를 항상 non-null String으로 */
 private fun ne(value: Any?): String = (value as? String).orEmpty()
+
+private fun koContentType(raw: String?): String? = when (raw) {
+    "WEBTOON" -> "웹툰"
+    "WEBNOVEL" -> "웹소설"
+    else -> raw
+}
+
+private fun koPlatform(raw: String?): String? = when (raw) {
+    "KAKAO_WEBTOON" -> "카카오웹툰"
+    "KAKAO_PAGE" -> "카카오페이지"
+    "NAVER_WEBTOON" -> "네이버웹툰"
+    "NOVELPIA" -> "노벨피아"
+    "MUNPIA" -> "문피아"
+    else -> raw
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FlowChips(items: List<String>) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items.forEach { text ->
+            AssistChip(
+                onClick = {},
+                label = { Text(text, maxLines = 1) }, // 칩 내부 텍스트는 1줄(너무 길면 칩 안에서만 … 처리)
+                modifier = Modifier
+            )
+        }
+    }
+}

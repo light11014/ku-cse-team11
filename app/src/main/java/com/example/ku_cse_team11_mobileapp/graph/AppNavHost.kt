@@ -63,10 +63,10 @@ fun AppNavHost() {
 
         composable(
             route = "community/{contentId}",
-            arguments = listOf(navArgument("contentId"){ type = NavType.IntType })
-        ) { backStack ->
-            val cid = backStack.arguments?.getInt("contentId") ?: return@composable
-            CommunityScreen(contentId = cid, navController = navController)
+            arguments = listOf(navArgument("contentId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("contentId") ?: return@composable
+            CommunityScreen(contentId = id, navController = navController)
         }
     }
 }

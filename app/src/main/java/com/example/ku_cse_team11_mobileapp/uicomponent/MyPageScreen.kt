@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.ku_cse_team11_mobileapp.api.model.ContentSummary
 import com.example.ku_cse_team11_mobileapp.api.model.ServiceLocator
+import com.example.ku_cse_team11_mobileapp.model.ContentNode
 import kotlinx.coroutines.launch
 
 
@@ -39,7 +40,16 @@ fun MyPageScreen(navController: NavHostController) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("마이페이지") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("마이페이지") },
+                actions = {
+                    TextButton(onClick = { showDialog = true }) {
+                        Text("로그아웃")
+                    }
+                }
+            )
+        }
     ) { inner ->
         Column(
             Modifier
@@ -48,13 +58,16 @@ fun MyPageScreen(navController: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(text = "안녕하세요, ${name?.ifBlank { "회원" }} 님!", style = MaterialTheme.typography.titleLarge)
-            OutlinedButton(onClick = { showDialog = true }) {
-                Text("로그아웃")
-            }
+            Text(
+                text = "${name?.ifBlank { "회원" }} 님!",
+                style = MaterialTheme.typography.titleLarge
+            )
 
             // 즐겨찾기 목록 ... (기존)ㅁ
-
+            Text(
+                text = "즐겨찾기 목록",
+                style = MaterialTheme.typography.titleMedium
+            )
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
@@ -90,31 +103,11 @@ fun MyPageScreen(navController: NavHostController) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(items) { c ->
-                        FavoriteCard(
-                            item = c,
-                            onClick = { navController.navigate("content/${c.id}") }
-                        )
+                        ContentNode(
+                            content = c,
+                            onClick = { navController.navigate("content/${c.id}") })
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FavoriteCard(item: ContentSummary, onClick: () -> Unit) {
-    Card(onClick = onClick) {
-        Column(Modifier.fillMaxWidth()) {
-            AsyncImage(
-                model = item.thumbnailUrl,
-                contentDescription = item.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-            )
-            Column(Modifier.padding(8.dp)) {
-                Text(item.title, maxLines = 1)
-                Text(item.authors, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

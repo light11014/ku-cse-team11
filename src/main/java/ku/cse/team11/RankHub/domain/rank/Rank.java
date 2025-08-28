@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import ku.cse.team11.RankHub.domain.content.Content;
 import ku.cse.team11.RankHub.domain.content.ContentType;
 import ku.cse.team11.RankHub.domain.content.Platform;
+import ku.cse.team11.RankHub.domain.tier.Tier;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,14 +38,6 @@ public class Rank {
     private Long views;
     private Integer viewRank;
     private Integer platformViewRank;
-
-    // 즐겨찾기 랭크
-    private Long favorites;
-    private Integer favoriteRank;
-
-    // 앱 내 사용자 평가
-    private Long gradeScore;
-    private String gradeRank;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;

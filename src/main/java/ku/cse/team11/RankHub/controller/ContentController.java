@@ -2,7 +2,9 @@ package ku.cse.team11.RankHub.controller;
 
 import ku.cse.team11.RankHub.domain.content.Content;
 import ku.cse.team11.RankHub.domain.content.ContentRepository;
+import ku.cse.team11.RankHub.domain.tier.*;
 import ku.cse.team11.RankHub.domain.translation.TranslateService;
+import ku.cse.team11.RankHub.dto.auth.ContentDetailResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -22,9 +25,13 @@ public class ContentController {
     private final ContentRepository contentRepository;
     private final TranslateService translateService; // Google Cloud Translation v3 사용
 
+    private final TierStatsRepository tierStatsRepository;
+    private final TierListRepository tierListRepository;
+
     @GetMapping("/{contentId}")
-    public Content getContentById(
+    public ContentDetailResponse getContentById(
             @PathVariable Long contentId,
+            @RequestParam(name = "memberId", required = false) Long memberId,
             @RequestParam(name = "lang", required = false) String targetLang
     ) {
         Content c = contentRepository.findById(contentId)
@@ -48,18 +55,63 @@ public class ContentController {
         // 2) 요청 언어 보정
         String outLang = normalizeLang(targetLang);
 
-        // 3) 번역이 필요 없는 경우(요청 없음 또는 동일 언어) → 원문 그대로
-        if (outLang == null || outLang.equalsIgnoreCase(sourceLang)) {
-//            return ResponseEntity.ok(responseBody(c.getId(), c.getTitle(), c.getDescription(), sourceLang));
-            return c;
+        // 4) 번역 필요 → title/description만 번역
+        if (outLang != null && !outLang.equalsIgnoreCase(sourceLang)) {
+            c.setTitle(translateSafe(c.getTitle(), outLang));
+            c.setDescription(translateSafe(c.getDescription(), outLang));
         }
 
-        // 4) 번역 필요 → title/description만 번역
+        //****** 티어 계산
+        // 평균 티어
+        TierStats statsEntity = tierStatsRepository.findByContentId(contentId).orElse(null);
+        Tier avgTier = statsEntity != null ? statsEntity.getAvgTier() : Tier.None;
 
-        c.setTitle(translateSafe(c.getTitle(), outLang));
-        c.setDescription(translateSafe(c.getDescription(), outLang));
-//        return ResponseEntity.ok(responseBody(c.getId(), outTitle, outDesc, outLang));
-        return c;
+        // 내 티어
+        Tier myTier = null;
+        if (memberId != null) {
+            myTier = tierListRepository.findByMemberIdAndContentId(memberId, contentId)
+                    .map(TierList::getTier)
+                    .orElse(null);
+        }
+
+        // 분포 통계
+        Map<String, Object> stats = new HashMap<>();
+        if (statsEntity != null) {
+            stats.put("rating_count", statsEntity.getRatingCount());
+            Map<String, Long> ratingMap = new HashMap<>();
+            ratingMap.put("S", tierListRepository.countByContentIdAndTier(contentId, Tier.S));
+            ratingMap.put("A", tierListRepository.countByContentIdAndTier(contentId, Tier.A));
+            ratingMap.put("B", tierListRepository.countByContentIdAndTier(contentId, Tier.B));
+            ratingMap.put("C", tierListRepository.countByContentIdAndTier(contentId, Tier.C));
+            ratingMap.put("D", tierListRepository.countByContentIdAndTier(contentId, Tier.D));
+            stats.put("rating", ratingMap);
+        }
+
+        ContentDetailResponse response = ContentDetailResponse.builder()
+                .id(c.getId())
+                .title(c.getTitle())
+                .authors(c.getAuthors())
+                .contentType(c.getContentType())
+                .description(c.getDescription())
+                .platform(c.getPlatform())
+                .thumbnailUrl(c.getThumbnailUrl())
+                .contentUrl(c.getContentUrl())
+                .totalEpisodes(c.getTotalEpisodes())
+                .tags(c.getTags())
+                .category(c.getCategory())
+                .ageRating(c.getAgeRating())
+                .pubPeriod(c.getPubPeriod())
+                .views(c.getViews())
+                .likes(c.getLikes())
+                .language(c.getLanguage())
+                .createdAt(c.getCreatedAt())
+                .updatedAt(c.getUpdatedAt())
+                .myTier(myTier)
+                .avgTier(avgTier)
+                .stats(stats)
+                .build();
+
+        return response;
     }
 
     // ---- helpers ----

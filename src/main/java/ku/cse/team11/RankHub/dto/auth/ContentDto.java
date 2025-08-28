@@ -9,16 +9,18 @@ public record ContentDto(
         String authors,
         String thumbnailUrl,
         String platform,
-        Long views
+        Long views,
+        Long likes
 ) {
-    public static ContentDto from(Content content, Long views) {
+    public static ContentDto from(Content content) {
         return new ContentDto(
                 content.getId(),
                 content.getTitle(),
                 content.getAuthors(),
                 content.getThumbnailUrl(),
                 content.getPlatform().name(),
-                views
+                content.getViews(),
+                content.getLikes()
         );
     }
 }

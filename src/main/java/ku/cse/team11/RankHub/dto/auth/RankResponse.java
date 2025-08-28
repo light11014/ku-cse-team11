@@ -4,12 +4,15 @@ import ku.cse.team11.RankHub.domain.rank.Rank;
 
 public record RankResponse(
         Integer rank,
+        Long score,
+
         ContentDto content
 ) {
     public static RankResponse from(Rank rank, boolean overall) {
         return new RankResponse(
                 overall ? rank.getViewRank() : rank.getPlatformViewRank(),
-                ContentDto.from(rank.getContent(), rank.getViews())
+                rank.getViews(),
+                ContentDto.from(rank.getContent())
         );
     }
 }

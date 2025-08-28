@@ -179,7 +179,13 @@ try:
         mapped["rating_count"] = parse_korean_number(mapped["rating_count"])
 
         # 언어 매핑
-        mapped["language"] = detect_language(mapped["description"])
+        lang = detect_language(mapped["description"])
+        if lang == "ko":
+            mapped["language"] = "kr"
+        elif lang == "ja" or lang == 'en':
+            mapped["language"] = lang
+        else:
+            mapped["language"] = "UNKNOWN"
 
         # SQL 실행
         sql = """

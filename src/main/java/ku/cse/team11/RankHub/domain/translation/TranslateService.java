@@ -130,11 +130,8 @@ public class TranslateService {
 
             // title/description만 번역
             String t = translateSafe(content.getTitle(), target);
-            String d = translateSafe(content.getDescription(), target);
-
             ObjectNode node = objectMapper.valueToTree(content);
             if (t == null) node.putNull("title"); else node.put("title", t);
-            if (d == null) node.putNull("description"); else node.put("description", d);
             return node;
         });
     }

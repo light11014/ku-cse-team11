@@ -23,11 +23,9 @@ public class Content {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = true)
     private String authors;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)
     private ContentType contentType;
 
     @Column(columnDefinition = "TEXT")
@@ -58,6 +56,10 @@ public class Content {
     private Long views = 0L;
 
     private Long likes = 0L;
+
+    // 언어
+    @Enumerated(EnumType.STRING)
+    private Language language;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

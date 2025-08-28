@@ -11,28 +11,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.saveable.rememberSaveable
 
-enum class Tier(val label: String) { S("S"), F("F"), UNKNOWN("Unknown") }
-
+enum class Tier(val label: String) { S("S"), A("A"), B("B"), C("C"), D("D"),F("F"), UNKNOWN("Unknown") }
 @Composable
 fun TierSelector(
-    contentId: Int,
-    modifier: Modifier = Modifier,
-    initial: Tier = Tier.UNKNOWN,
-    onChanged: (Tier) -> Unit = {}     // 나중에 API 저장 연결용
+    selected: Tier,
+    onSelect: (Tier) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    // 재조립/회전까지 유지(앱 재시작시엔 초기화됨)
-    var tierName by rememberSaveable(contentId) { mutableStateOf(initial.name) }
-    val tier = remember(tierName) { Tier.valueOf(tierName) }
-
     Column(modifier = modifier) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Tier.values().forEach { t ->
+            Tier.entries.forEach { t ->
                 FilterChip(
-                    selected = (t == tier),
-                    onClick = {
-                        tierName = t.name
-                        onChanged(t)  // 훗날 서버 저장 호출만 연결
-                    },
+                    selected = (t == selected),
+                    onClick = { onSelect(t) },
                     label = { Text(t.label) },
                     leadingIcon = {
                         Box(
@@ -45,25 +36,30 @@ fun TierSelector(
                 )
             }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(3.dp))
         AssistChip(
             onClick = {},
-            label = { Text("현재 선택: ${tier.label}") },
+            label = { Text("현재 선택: ${selected.label}") },
             leadingIcon = {
                 Box(
                     Modifier
                         .size(12.dp)
                         .clip(CircleShape)
-                        .background(colorForTier(tier))
+                        .background(colorForTier(selected))
                 )
             }
         )
     }
 }
 
+
 @Composable
 private fun colorForTier(t: Tier): Color = when (t) {
     Tier.S -> Color(0xFF2ECC71)      // 그린
+    Tier.A -> Color(0xFFF1C40F)      // 노랑
+    Tier.B -> Color(0xFF3498DB)      // 블루
+    Tier.C -> Color(0xFF9B59B6)      // 보라
+    Tier.D -> Color(0xFFE67E22)      // 오렌지
     Tier.F -> Color(0xFFE74C3C)      // 레드
     Tier.UNKNOWN -> Color(0xFF95A5A6) // 그레이
 }

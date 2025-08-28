@@ -1,5 +1,7 @@
 package com.example.ku_cse_team11_mobileapp.model
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,8 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.example.ku_cse_team11_mobileapp.R
 import com.example.ku_cse_team11_mobileapp.api.model.ContentSummary
 
 @Composable
@@ -88,6 +90,24 @@ fun ContentNode(
                     .padding(6.dp)
             )
 
+            platformIconRes(content.platform)?.let { resId ->
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 6.dp, top = 38.dp) // 랭크가 여기면 top = 28.dp 로 조정
+                        .background(
+                            color = Color.Black.copy(alpha = 0.45f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 4.dp, vertical = 3.dp)
+                ) {
+                    Image(
+                        painter = painterResource(resId),
+                        contentDescription = "플랫폼",
+                        modifier = Modifier.size(18.dp) // ← 작게
+                    )
+                }
+            }
             // 하단 스크림(그라데이션)로 글씨 가독성 ↑
             Box(
                 modifier = Modifier
@@ -237,3 +257,15 @@ private fun compactCount(n: Long): String = when {
 
 private fun fixUrl(url: String?): String? =
     url?.let { if (it.startsWith("//")) "https:$it" else it }
+
+@DrawableRes
+private fun platformIconRes(platform: String?): Int? = when (platform?.trim()?.uppercase()) {
+    "KAKAO_PAGE"    -> R.drawable.kakaopage_image
+    "KAKAO_WEBTOON" -> R.drawable.kakaowebtoon_image
+    "NAVER_WEBTOON" -> R.drawable.naverwebtoon_image
+    "NOVELPIA"      -> R.drawable.novelpia_image
+    "MUNPIA", "MOONPIA" -> R.drawable.munpia_image
+    "SERIES"        -> R.drawable.series_image
+    "WEBNOVEL" -> R.drawable.webnovel_image
+    else -> null
+}

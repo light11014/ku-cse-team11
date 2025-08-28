@@ -82,7 +82,8 @@ class FavoritesRepositoryImpl(
                     authors = d.authors ?: "",
                     thumbnailUrl = d.thumbnailUrl,
                     platform = d.platform ?: "",
-                    views = d.views
+                    views = d.views,
+                    tier = d.avgTier
                 )
             }.getOrNull()
         }

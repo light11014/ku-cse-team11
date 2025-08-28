@@ -1,7 +1,6 @@
 package com.example.ku_cse_team11_mobileapp.uicomponent
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -12,9 +11,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,7 +51,6 @@ fun ContentDetailScreen(
     )
     val state by vm.uiState.collectAsStateWithLifecycle()
 
-    // 로그인 세션에서 memberId 관찰 → 값 바뀌면 상세 재조회
     val memberId by ServiceLocator.session.memberIdFlow.collectAsStateWithLifecycle(initialValue = null)
     LaunchedEffect(memberId) { vm.load(memberId, lang) }
 
@@ -68,7 +68,6 @@ fun ContentDetailScreen(
                     }
                 },
                 actions = {
-                    // 별 토글 (내 즐겨찾기)
                     FavoriteStar(
                         contentId = contentId,
                         onError = { msg -> scope.launch { snackbarHostState.showSnackbar(msg) } }
@@ -76,20 +75,25 @@ fun ContentDetailScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+
+        // ✅ 커뮤니티 이동 FAB
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { navController.navigate("community/$contentId") },
+                icon = { Icon(Icons.Filled.Edit, contentDescription = null) },
+                text  = { Text("커뮤니티 글쓰기") }
+            )
+        }
     ) { inner ->
         when (val s = state) {
             is ContentDetailViewModel.UiState.Loading -> Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(inner),
+                Modifier.fillMaxSize().padding(inner),
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
 
             is ContentDetailViewModel.UiState.Error -> Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(inner),
+                Modifier.fillMaxSize().padding(inner),
                 contentAlignment = Alignment.Center
             ) { Text("오류: ${s.message}") }
 
@@ -97,10 +101,19 @@ fun ContentDetailScreen(
                 val c = s.data
                 val tags = parseTags(c.tags)
 
+                // ✅ 내 티어를 상단에서 상태로 보관 → 화면 즉시 반영
+                val myTierFromApi: Tier = parseTier(c.myTier)
+                var myTier by rememberSaveable(contentId) { mutableStateOf(myTierFromApi) }
+                LaunchedEffect(myTierFromApi) {
+                    myTier = myTierFromApi
+                }
+                // ✅ 선택 직후 차트에 즉시 반영(옵티미스틱 카운트 조정)
+                val displayRating = remember(c.stats?.rating, myTierFromApi, myTier) {
+                    optimisticRatingMap(c.stats?.rating ?: emptyMap(), myTierFromApi, myTier)
+                }
+
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(inner),
+                    modifier = Modifier.fillMaxSize().padding(inner),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -117,21 +130,9 @@ fun ContentDetailScreen(
                         )
                     }
 
-                    // 작품 정보
+                    // 작품 정보 + 우측 큰 티어 배지
                     item {
-                        SectionCard(title = "작품 정보") {
-                            val badgeTier = remember(s.data.avgTier) {
-                                normalizeTierLabel(s.data.avgTier)
-                            }
-                            Text(
-                                c.title,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(c.authors, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(Modifier.height(8.dp))
-
+                        SectionCard(title = " ") {
                             FlowRow(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -142,18 +143,41 @@ fun ContentDetailScreen(
                                 c.category?.takeIf { it.isNotBlank() }?.let {
                                     AssistChip(onClick = {}, label = { Text(it) })
                                 }
-                                c.ageRating?.takeIf { it.isNotBlank() }?.let {
-                                    AssistChip(onClick = {}, label = { Text("연령등급: $it") })
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            val badgeTier = remember(c.avgTier) { normalizeTierLabel(c.avgTier) }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        c.title,
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(c.authors, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 if (badgeTier != null) {
                                     TierBadgeLarge(
                                         tier = badgeTier,
-                                        modifier = Modifier.padding(start = 4.dp)
+                                        modifier = Modifier.padding(start = 12.dp)
                                     )
                                 }
                             }
                         }
+                    }
 
+                    // 설명
+                    c.description?.takeIf { it.isNotBlank() }?.let { desc ->
+                        item { SectionCard(title = "설명") { Text(desc) } }
                     }
 
                     // 연재 정보
@@ -187,14 +211,7 @@ fun ContentDetailScreen(
                         }
                     }
 
-                    // 설명
-                    c.description?.takeIf { it.isNotBlank() }?.let { desc ->
-                        item {
-                            SectionCard(title = "설명") { Text(desc) }
-                        }
-                    }
-
-                    // 외부 링크
+                    // 바로가기
                     c.contentUrl?.takeIf { it.isNotBlank() }?.let { link ->
                         item {
                             SectionCard(title = "바로가기") {
@@ -210,45 +227,33 @@ fun ContentDetailScreen(
                         }
                     }
 
-                    // 메타 (있을 때만)
-                    val metaRows = buildList {
-                        c.createdAt?.takeIf { it.isNotBlank() }?.let { add("생성일" to formatDate(it)) }
-                        c.updatedAt?.takeIf { it.isNotBlank() }?.let { add("수정일" to formatDate(it)) }
-                        add("ID" to c.id.toString())
-                        c.language?.takeIf { it.isNotBlank() }?.let { add("언어" to it) }
-                        add("조회수" to formatCount(c.views))
-                        add("추천수" to c.likes.toString())
-                    }
-                    if (metaRows.isNotEmpty()) {
-                        item { SectionCard(title = "메타데이터") { KeyValueRows(metaRows) } }
-                    }
+                    // 메타
+                    val metaRows = listOf(
+                        "조회수" to formatCount(c.views),
+                        "추천수" to c.likes.toString()
+                    )
+                    item { SectionCard(title = "메타데이터") { KeyValueRows(metaRows) } }
 
-                    // 내 티어 / 평균 티어 / 참여 수
+                    // ✅ 티어 요약(내 티어는 즉시 반영: myTier 사용)
                     item {
                         SectionCard(title = "티어 요약") {
                             FlowRow(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                c.myTier?.takeIf { it.isNotBlank() }?.let {
-                                    AssistChip(onClick = {}, label = { Text("내 티어: $it") })
-                                }
+                                AssistChip(onClick = {}, label = { Text("내 티어: ${myTier.label}") })
                                 c.avgTier?.takeIf { it.isNotBlank() }?.let {
                                     AssistChip(onClick = {}, label = { Text("평균 티어: $it") })
                                 }
-                                Text(
-                                    "참여 ${c.stats?.ratingCount ?: 0}명",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
                         }
                     }
 
-                    // 티어 분포 그래프
+                    // ✅ 티어 분포(옵티미스틱 반영)
                     item {
                         SectionCard(title = "티어 분포") {
                             TierBarChart(
-                                rating = c.stats?.rating ?: emptyMap(),
+                                rating = displayRating,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(160.dp)
@@ -257,36 +262,24 @@ fun ContentDetailScreen(
                         }
                     }
 
-                    // 커뮤니티
-                    item {
-                        SectionCard(title = "커뮤니티") {
-                            Text("이 작품의 커뮤니티에서 글을 남겨보세요.")
-                            Spacer(Modifier.height(8.dp))
-                            Button(onClick = { navController.navigate("community/$contentId") }) {
-                                Text("커뮤니티로 이동")
-                            }
-                        }
-                    }
-
-                    // 티어 등록 (선택 시 서버 전송)
+                    // ✅ 티어 선택(선택 즉시 myTier 반영 + 서버 전송)
                     item {
                         SectionCard(title = "티어리스트 등록") {
-                            val mid = memberId
                             TierSelector(
-                                contentId = contentId,
-                                onChanged = { chosen ->
-                                    if (mid == null) {
+                                selected = myTier,
+                                onSelect = { chosen ->
+                                    myTier = chosen
+                                    if (memberId == null) {
                                         scope.launch { snackbarHostState.showSnackbar("로그인이 필요합니다.") }
                                         return@TierSelector
                                     }
                                     scope.launch {
                                         runCatching {
-                                            // repo.postTier: 이전에 구현한 API 호출 사용
-                                            repo.postTier(contentId, mid, toApiTier(chosen.name))
-                                        }.onSuccess { res ->
-                                            snackbarHostState.showSnackbar("티어 등록: ${res.tier} (score=${res.score})")
-                                            // 등록 후 상세 재조회(내 티어/통계 갱신)
-                                            vm.load(memberId = mid, lang = lang)
+                                            repo.postTier(contentId, memberId!!, chosen.name)
+                                        }.onSuccess {
+                                            snackbarHostState.showSnackbar("티어 등록: ${chosen.label}")
+                                            // 서버 반영 후 최신 데이터 다시 받고 싶으면↓
+                                            // vm.load(memberId, lang)
                                         }.onFailure { e ->
                                             snackbarHostState.showSnackbar(e.message ?: "요청 실패")
                                         }
@@ -316,12 +309,10 @@ private fun SectionCard(
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(
-            Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            if (title.isNotBlank()) Text(title, style = MaterialTheme.typography.titleMedium)
             content()
         }
     }
@@ -349,32 +340,26 @@ private fun TierBarChart(
     rating: Map<String, Int>,
     modifier: Modifier = Modifier
 ) {
-    val order = listOf("S", "A", "B", "C", "D")
+    val order = listOf("S", "A", "B", "C", "D", "F")
     val data = order.map { it to (rating[it] ?: 0) }
     val max = data.maxOfOrNull { it.second } ?: 0
-    val barAreaHeight = 120.dp
+    val barAreaHeight = 150.dp
 
     Column(modifier) {
-        // 막대 영역
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
             verticalAlignment = Alignment.Bottom
         ) {
             data.forEach { (tier, count) ->
                 val frac = if (max > 0) (count / max.toFloat()).coerceIn(0f, 1f) else 0f
-
                 Column(
                     Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // 막대 컨테이너(고정 높이)
                     Box(
-                        Modifier
-                            .height(barAreaHeight)
-                            .fillMaxWidth()
+                        Modifier.height(barAreaHeight).fillMaxWidth()
                     ) {
-                        // 실제 바(아래 정렬 + 비율 높이)
                         Box(
                             Modifier
                                 .fillMaxWidth()
@@ -384,13 +369,10 @@ private fun TierBarChart(
                                 .background(barColorForTier(tier))
                         )
                     }
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(1.dp))
                     Text(tier, style = MaterialTheme.typography.labelMedium)
-                    Text(
-                        "$count",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text("$count", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -399,11 +381,12 @@ private fun TierBarChart(
 
 @Composable
 private fun barColorForTier(tier: String): Color = when (tier.uppercase()) {
-    "S" -> Color(0xFF7C4DFF)   // 보라
-    "A" -> Color(0xFF42A5F5)   // 파랑
-    "B" -> Color(0xFF26A69A)   // 청록
-    "C" -> Color(0xFFFFCA28)   // 노랑
-    "D" -> Color(0xFFEF5350)   // 빨강
+    "S" -> Color(0xFF2ECC71)
+    "A" -> Color(0xFFF1C40F)
+    "B" -> Color(0xFF3498DB)
+    "C" -> Color(0xFF9B59B6)
+    "D" -> Color(0xFFE67E22)
+    "F" -> Color(0xFFE74C3C)
     else -> MaterialTheme.colorScheme.primary
 }
 
@@ -453,22 +436,33 @@ private fun mapPlatformKo(p: String?): String? = when (p?.uppercase()) {
     else            -> p
 }
 
-/** UI 선택값 → API 전송용 티어 문자열 */
-private fun toApiTier(ui: String): String = when (ui.uppercase()) {
-    "S","A","B","C","D","F" -> ui.uppercase()
-    "UNKNOWN","UN","U","?"  -> "UNKNOWN"
-    else -> ui.uppercase()
-}
-
 private fun normalizeTierLabel(raw: String?): String? {
     val t = raw?.trim()?.uppercase().orEmpty()
     if (t.isEmpty()) return null
     return when (t) {
         "S","A","B","C","D","F" -> t
-        "NONE","NULL","N/A"     -> "N"   // None은 N으로 축약 표시
-        else                    -> t     // 혹시 모르는 값은 있는 그대로
+        "NONE","NULL","N/A"     -> "N"
+        else                    -> t
     }
 }
+
+// ✅ 내 기존 티어→새 티어로 카운트 조정(옵티미스틱)
+private fun optimisticRatingMap(
+    original: Map<String, Int>,
+    prev: Tier,
+    curr: Tier
+): Map<String, Int> {
+    fun k(t: Tier) = when (t) {
+        Tier.UNKNOWN -> "UNKNOWN"
+        else -> t.name
+    }
+    val m = original.toMutableMap()
+    if (prev != Tier.UNKNOWN) m[k(prev)] = (m[k(prev)] ?: 0).coerceAtLeast(1) - 1
+    if (curr != Tier.UNKNOWN) m[k(curr)] = (m[k(curr)] ?: 0) + 1
+    return m
+}
+
+/* ====== TierBadgeLarge / TierSelector, barColorForTier 등은 기존 그대로 사용 ====== */
 
 @Composable
 private fun TierBadgeLarge(
@@ -514,3 +508,6 @@ private fun TierBadgeLarge(
         )
     }
 }
+
+fun parseTier(s: String?): Tier =
+    Tier.entries.firstOrNull { it.name.equals(s ?: "", true) } ?: Tier.UNKNOWN

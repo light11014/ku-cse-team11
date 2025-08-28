@@ -167,7 +167,7 @@ fun CommunityScreen(
                 ) {
                     items(s.visibleItems, key = { it.id }) { c ->
                         CommentCard(
-                            author = "작성자 #${c.memberId}",
+                            author = "작성자 #${c.memberName}",
                             time = formatTime(c.createdAt),
                             body = c.body
                         )

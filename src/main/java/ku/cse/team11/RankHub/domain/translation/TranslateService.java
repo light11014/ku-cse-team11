@@ -7,12 +7,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.cloud.translate.v3.*;
 import com.google.cloud.translate.v3.LocationName;
 import ku.cse.team11.RankHub.domain.content.Content;
+import ku.cse.team11.RankHub.dto.auth.ContentDto;
+import ku.cse.team11.RankHub.dto.auth.RankResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +30,76 @@ public class TranslateService {
 
     @Value("${app.google.location:global}")
     private String location;
+    public List<RankResponse> translateRankResponses(List<RankResponse> ranks, String lang) {
+        if (ranks == null || ranks.isEmpty()) return ranks;
 
+        final String target = normalizeLang(lang);
+        if (target == null || target.isBlank()) return ranks;
+
+        // 원문 언어별로 번역 필요 여부 판정 & 배치 번역을 위한 수집
+        // key: sourceLang, value: 번역해야 할 타이틀 목록
+        Map<String, List<String>> titlesBySource = new HashMap<>();
+        Map<String, List<Integer>> indexesBySource = new HashMap<>();
+
+        for (int i = 0; i < ranks.size(); i++) {
+            RankResponse rr = ranks.get(i);
+            ContentDto c = rr.content();
+            String source = normalizeLangOrDefault(c.language(), "ko");
+
+            if (!target.equalsIgnoreCase(source)) {
+                String title = safeText(c.title());
+                if (title != null && !title.isBlank()) {
+                    titlesBySource.computeIfAbsent(source, k -> new ArrayList<>()).add(title);
+                    indexesBySource.computeIfAbsent(source, k -> new ArrayList<>()).add(i);
+                }
+            }
+        }
+
+        if (titlesBySource.isEmpty()) {
+            // 모두 동일 언어여서 번역 불필요
+            return ranks;
+        }
+
+        // source 언어가 섞여 있어도 Google API는 target만 지정하면 되지만,
+        // 품질을 위해 source 묶음 단위로 번역(옵션) -> 현재 v3 API는 source 미지정 자동감지
+        // 배치 번역 실행
+        Map<Integer, String> translatedTitleByIndex = new HashMap<>();
+        for (Map.Entry<String, List<String>> entry : titlesBySource.entrySet()) {
+            List<String> originals = entry.getValue();
+            List<Integer> idxs = indexesBySource.get(entry.getKey());
+            List<String> translated = translateBatch(originals, target);
+            for (int k = 0; k < idxs.size(); k++) {
+                translatedTitleByIndex.put(idxs.get(k), translated.get(k));
+            }
+        }
+
+        // 새 DTO로 치환
+        List<RankResponse> out = new ArrayList<>(ranks.size());
+        for (int i = 0; i < ranks.size(); i++) {
+            RankResponse rr = ranks.get(i);
+            ContentDto c = rr.content();
+            String newTitle = translatedTitleByIndex.getOrDefault(i, c.title());
+
+            ContentDto replacedContent = new ContentDto(
+                    c.id(),
+                    newTitle,
+                    c.authors(),
+                    c.thumbnailUrl(),
+                    c.platform(),
+                    c.views(),
+                    c.likes(),
+                    c.language(),  // 원문 언어는 그대로 유지
+                    c.tier()
+            );
+
+            out.add(new RankResponse(
+                    rr.rank(),
+                    rr.score(),
+                    replacedContent
+            ));
+        }
+        return out;
+    }
     public String translate(String text, String targetLang) {
         if (text == null || text.isBlank() || targetLang == null || targetLang.isBlank()) return text;
 
@@ -67,6 +140,31 @@ public class TranslateService {
     }
 
     // ---------- helpers ----------
+    private List<String> translateBatch(List<String> texts, String targetLang) {
+        if (texts == null || texts.isEmpty()) return Collections.emptyList();
+
+        TranslateTextRequest.Builder builder = TranslateTextRequest.newBuilder()
+                .setParent(LocationName.of(projectId, location).toString())
+                .setMimeType("text/plain")
+                .setTargetLanguageCode(targetLang);
+
+        for (String t : texts) {
+            builder.addContents(t == null ? "" : t);
+        }
+
+        try {
+            TranslateTextResponse res = client.translateText(builder.build());
+            if (res.getTranslationsCount() == texts.size()) {
+                return res.getTranslationsList()
+                        .stream()
+                        .map(tr -> tr.getTranslatedText())
+                        .collect(Collectors.toList());
+            }
+        } catch (Exception ignored) {}
+
+        // 실패 시 원문 반환 (길이 보존)
+        return new ArrayList<>(texts);
+    }
 
     private String translateSafe(String text, String targetLang) {
         if (text == null || text.isBlank()) return text;
@@ -98,5 +196,14 @@ public class TranslateService {
         if (v.isEmpty()) return null;
         if (v.equalsIgnoreCase("kr")) return "ko"; // 관용 입력 보정
         return v.toLowerCase(); // "en", "ko", "ja", "zh-cn" 등
+    }
+
+    private String normalizeLangOrDefault(String lang, String def) {
+        String n = normalizeLang(lang);
+        return (n == null) ? def : n;
+    }
+
+    private String safeText(String s) {
+        return (s == null || s.isBlank()) ? null : s;
     }
 }

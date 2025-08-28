@@ -1,9 +1,7 @@
 package ku.cse.team11.RankHub.dto.auth;
 
 import ku.cse.team11.RankHub.domain.content.Content;
-import ku.cse.team11.RankHub.domain.rank.Rank;
 import ku.cse.team11.RankHub.domain.tier.Tier;
-import lombok.AllArgsConstructor;
 
 public record ContentDto(
         Long id,
@@ -13,6 +11,7 @@ public record ContentDto(
         String platform,
         Long views,
         Long likes,
+        String language,
         Tier tier
 ) {
     public static ContentDto from(Content content, Tier tier) {
@@ -24,6 +23,7 @@ public record ContentDto(
                 content.getPlatform().name(),
                 content.getViews(),
                 content.getLikes(),
+                content.getLanguage().name(),
                 tier
         );
     }

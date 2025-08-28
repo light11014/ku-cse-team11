@@ -152,13 +152,13 @@ public class ContentController {
     @GetMapping("/sorted")
     public ResponseEntity<List<Map<String, Object>>> getContentsByTier(
             @RequestParam ContentType contentType,
-            @RequestParam(required = false) Platform platform
+            @RequestParam String platform
     ) {
         List<ContentDto> contents;
-        if (platform != null) {
-            contents = contentService.getContentsByTierAndPlatform(contentType, platform);
-        } else {
+        if (platform.equals("ALL")) {
             contents = contentService.getContentsByTier(contentType);
+        } else {
+            contents = contentService.getContentsByTierAndPlatform(contentType, Platform.valueOf(platform));
         }
 
         List<Map<String, Object>> response = IntStream.range(0, contents.size())

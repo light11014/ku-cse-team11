@@ -38,14 +38,6 @@ public class Rank {
     private Integer viewRank;
     private Integer platformViewRank;
 
-    // 즐겨찾기 랭크
-    private Long favorites;
-    private Integer favoriteRank;
-
-    // 앱 내 사용자 평가
-    private Long gradeScore;
-    private String gradeRank;
-
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 

@@ -3,6 +3,7 @@ package ku.cse.team11.RankHub.domain.rank;
 import ku.cse.team11.RankHub.domain.content.ContentRepository;
 import ku.cse.team11.RankHub.domain.content.ContentType;
 import ku.cse.team11.RankHub.domain.content.Platform;
+import ku.cse.team11.RankHub.domain.tier.TierStatsService;
 import ku.cse.team11.RankHub.dto.auth.RankResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RankService {
     private final RankRepository rankRepository;
+    private final TierStatsService tierStatsService;
 
     // Rank 최신화
     @Transactional
@@ -40,7 +42,7 @@ public class RankService {
         }
 
         return ranks.stream()
-                .map(r -> RankResponse.from(r, overall))
+                .map(r -> RankResponse.from(r, tierStatsService.getAvgTierByContentId(r.getContent().getId()), overall))
                 .toList();
     }
 }

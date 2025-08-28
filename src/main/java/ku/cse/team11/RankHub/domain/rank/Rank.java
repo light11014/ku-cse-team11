@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import ku.cse.team11.RankHub.domain.content.Content;
 import ku.cse.team11.RankHub.domain.content.ContentType;
 import ku.cse.team11.RankHub.domain.content.Platform;
+import ku.cse.team11.RankHub.domain.tier.Tier;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

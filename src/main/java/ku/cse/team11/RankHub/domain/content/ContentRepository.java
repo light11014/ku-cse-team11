@@ -15,10 +15,8 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
     @Query("""
         SELECT c FROM Content c
         WHERE
-            (:keyword IS NULL OR LENGTH(:keyword) = 0 OR
-             LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%')))
-
-          AND
+            (:keyword IS NULL OR c.title ILIKE CONCAT('%', CAST(:keyword AS string), '%'))
+        AND
             (:contentType IS NULL OR c.contentType = :contentType)
 
           AND

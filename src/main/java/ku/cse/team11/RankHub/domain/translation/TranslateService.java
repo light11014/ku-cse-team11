@@ -82,13 +82,11 @@ public class TranslateService {
         String fallback = "ko"; // 현재 DB는 한글 원문
         try {
             // 나중에 content.lang 컬럼(getLang()) 추가되면 자동 활용
-            Method getLang = c.getClass().getMethod("getLang");
-            Object v = getLang.invoke(c);
+            Object v = c.getLanguage();
             if (v != null) {
                 String s = normalizeLang(v.toString());
                 if (s != null) return s;
             }
-        } catch (NoSuchMethodException ignored) {
         } catch (Exception ignored) {
         }
         return fallback;

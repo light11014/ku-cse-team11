@@ -32,9 +32,6 @@ public class SearchService{
             String targetLang
     ) {
         String kw = (keyword == null) ? null : keyword.trim();
-        if (kw != null && !kw.isEmpty() && kw.length() < 2) {
-            throw new IllegalArgumentException("검색어는 최소 2글자 이상이어야 합니다.");
-        }
 
         // 에피소드 범위 sanity check (선택)
         if (minEpisode != null && minEpisode < 0) minEpisode = 0;

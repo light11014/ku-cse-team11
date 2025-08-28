@@ -39,6 +39,7 @@ public class SearchController {
             @RequestParam(required = false) String lang
 
     ) {
+        if (keyword != null && keyword.isBlank()) keyword = null;
         try{
             Page<ObjectNode> results = searchService.search(
                     keyword, contentType, platform, minEpisode, maxEpisode, page, size,lang

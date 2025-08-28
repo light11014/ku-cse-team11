@@ -36,13 +36,11 @@ public class ContentController {
         //    - 나중에 getLang()이 생기면 자동으로 사용됨(리플렉션)
         String sourceLang = "ko";
         try {
-            Method getLang = c.getClass().getMethod("getLang");
-            Object val = getLang.invoke(c);
+
+            Object val = c.getLanguage();
             if (val != null && !val.toString().isBlank()) {
                 sourceLang = normalizeLang(val.toString());
             }
-        } catch (NoSuchMethodException ignored) {
-            // 컬럼이 아직 없을 때: 기본 "ko"
         } catch (Exception e) {
             // 예외시에도 안전하게 기본 "ko"
         }

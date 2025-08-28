@@ -35,4 +35,6 @@ class FavoritesStore(private val context: Context) {
             pref[KEY_IDS] = cur
         }
     }
+
+    suspend fun clear() = setAll(emptySet())
 }

@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.ku_cse_team11_mobileapp.api.model.ContentSummary
 import com.example.ku_cse_team11_mobileapp.api.model.ServiceLocator
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,6 +24,8 @@ fun MyPageScreen(navController: NavHostController) {
     var error by remember { mutableStateOf<String?>(null) }
     var items by remember { mutableStateOf<List<ContentSummary>>(emptyList()) }
     val repo = ServiceLocator.favoritesRepo
+    val scope = rememberCoroutineScope()
+    var showDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         loading = true
@@ -46,7 +49,33 @@ fun MyPageScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(text = "안녕하세요, ${name?.ifBlank { "회원" }} 님!", style = MaterialTheme.typography.titleLarge)
+            OutlinedButton(onClick = { showDialog = true }) {
+                Text("로그아웃")
+            }
 
+            // 즐겨찾기 목록 ... (기존)ㅁ
+
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = { Text("로그아웃") },
+                    text = { Text("정말 로그아웃 하시겠어요?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showDialog = false
+                            scope.launch {
+                                ServiceLocator.logoutAll()
+                                // 네비게이션: 로그인 화면/그래프 시작점으로 이동
+                                navController.navigate("login") {
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        }) { Text("로그아웃") }
+                    },
+                    dismissButton = { TextButton(onClick = { showDialog = false }) { Text("취소") } }
+                )
+            }
             if (loading) {
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             } else if (error != null) {

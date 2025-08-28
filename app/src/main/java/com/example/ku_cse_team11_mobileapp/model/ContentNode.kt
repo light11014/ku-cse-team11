@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.ku_cse_team11_mobileapp.api.model.ContentSummary
 import com.example.ku_cse_team11_mobileapp.uicomponent.FavoriteStar
+import com.example.ku_cse_team11_mobileapp.uicomponent.fixUrl
 
 @Composable
 fun ContentNode(
@@ -51,7 +52,7 @@ fun ContentNode(
         ) {
             // 썸네일 이미지
             AsyncImage(
-                model = content.thumbnailUrl,
+                model = fixUrl(content.thumbnailUrl),
                 contentDescription = content.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()

@@ -337,7 +337,7 @@ private fun formatDate(raw: String?): String {
     }.getOrElse { raw }
 }
 
-private fun fixUrl(url: String?): String? =
+public fun fixUrl(url: String?): String? =
     url?.let { if (it.startsWith("//")) "https:$it" else it }
 
 private fun nb(value: Any?): String? {

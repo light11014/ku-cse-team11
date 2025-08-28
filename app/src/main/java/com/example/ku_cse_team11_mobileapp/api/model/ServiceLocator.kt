@@ -66,4 +66,10 @@ object ServiceLocator {
             session
         )
     }
+
+    suspend fun logoutAll() {
+        // 쿠키/헤더 쓰면 여기서 OkHttp cookieJar clear 등도 해주기
+        favoritesStore.clear()
+        session.logout()
+    }
 }

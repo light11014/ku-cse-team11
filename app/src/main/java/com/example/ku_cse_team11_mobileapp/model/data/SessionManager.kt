@@ -30,4 +30,13 @@ class SessionManager(private val context: Context) {
     suspend fun clear() {
         context.dataStore.edit { it.clear() }
     }
+
+    suspend fun logout() {
+        context.dataStore.edit { pref ->
+            pref.remove(KEY_MEMBER_ID)
+            pref.remove(KEY_LOGIN_ID)
+            pref.remove(KEY_NAME)
+            // 토큰/쿠키 쓰면 여기도 함께 제거
+        }
+    }
 }

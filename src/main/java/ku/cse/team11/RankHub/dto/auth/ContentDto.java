@@ -3,6 +3,7 @@ package ku.cse.team11.RankHub.dto.auth;
 import ku.cse.team11.RankHub.domain.content.Content;
 import ku.cse.team11.RankHub.domain.rank.Rank;
 import ku.cse.team11.RankHub.domain.tier.Tier;
+import lombok.AllArgsConstructor;
 
 public record ContentDto(
         Long id,

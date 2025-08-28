@@ -1,5 +1,6 @@
 package ku.cse.team11.RankHub.domain.content;
 
+import ku.cse.team11.RankHub.dto.auth.RankResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ContentRepository extends JpaRepository<Content, Long> {
@@ -41,4 +43,5 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
             @Param("maxEpisode") Integer maxEpisode,
             Pageable pageable
     );
+
 }

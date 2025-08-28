@@ -43,11 +43,11 @@ public class TierStatsService {
     }
 
     private Tier convertScoreToTier(Double avg) {
-        if (avg >= 45) return Tier.S;
-        else if (avg >= 35) return Tier.A;
-        else if (avg >= 25) return Tier.B;
-        else if (avg >= 15) return Tier.C;
-        else if (avg >= 5) return Tier.D;
+        if (avg >= 37) return Tier.S;
+        else if (avg >= 31) return Tier.A;
+        else if (avg >= 26) return Tier.B;
+        else if (avg >= 20) return Tier.C;
+        else if (avg >= 15) return Tier.D;
         else return Tier.F;
     }
 

@@ -4,6 +4,8 @@ import com.example.ku_cse_team11_mobileapp.api.db.ContentApi
 import com.example.ku_cse_team11_mobileapp.api.model.ContentDetail
 import com.example.ku_cse_team11_mobileapp.api.model.ContentSummary
 import com.example.ku_cse_team11_mobileapp.api.model.RankResponse
+import com.example.ku_cse_team11_mobileapp.api.model.TierRequest
+import com.example.ku_cse_team11_mobileapp.api.model.TierResponse
 import java.util.concurrent.ConcurrentHashMap
 
 class ContentRepositoryImpl(
@@ -42,8 +44,11 @@ class ContentRepositoryImpl(
         return filtered
     }
 
-    override suspend fun getContentDetail(contentId: Int, lang: String?): ContentDetail =
-        api.getContentDetail(contentId, lang)
+    override suspend fun getContentDetail(
+        contentId: Int,
+        lang: String?,
+        memberId: Long?
+    ): ContentDetail = api.getContentDetail(contentId, lang, memberId)
 
     override suspend fun search(
         keyword: String?, contentType: String?, platform: String?,
@@ -59,5 +64,9 @@ class ContentRepositoryImpl(
     override suspend fun getFavoriteCount(contentId: Int): Int {
         val text = api.getFavoriteCountRaw(contentId).string().trim()
         return text.toIntOrNull() ?: 0
+    }
+    override suspend fun postTier(contentId: Int, memberId: Long, tier: String): TierResponse {
+        val req = TierRequest(contentId = contentId, memberId = memberId, tier = tier)
+        return api.postTier(req)
     }
 }

@@ -4,8 +4,11 @@ import com.example.ku_cse_team11_mobileapp.api.model.ContentDetail
 import com.example.ku_cse_team11_mobileapp.api.model.ContentSummary
 import com.example.ku_cse_team11_mobileapp.api.model.PageResponse
 import com.example.ku_cse_team11_mobileapp.api.model.RankResponse
+import com.example.ku_cse_team11_mobileapp.api.model.TierRequest
+import com.example.ku_cse_team11_mobileapp.api.model.TierResponse
 import com.example.ku_cse_team11_mobileapp.model.community.ContentComment
 import okhttp3.ResponseBody
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -23,10 +26,11 @@ interface ContentApi {
         @Query("limit") limit: Int? = null   // 옵션
     ): List<RankResponse>
 
-    @GET("/api/content/{contentId}")
+    @GET("api/content/{contentId}")
     suspend fun getContentDetail(
         @Path("contentId") contentId: Int,
-        @Query("lang") lang: String? = null // 선택값
+        @Query("lang") lang: String? = null,            // "kr", "en", "ja" ...
+        @Query("memberId") memberId: Long? = null        // 로그인 시 전달
     ): ContentDetail
 
     @GET("/api/search")
@@ -57,4 +61,6 @@ interface ContentApi {
     suspend fun getFavoriteCountRaw(
         @Query("contentId") contentId: Int
     ): ResponseBody
+    @POST("api/tier")
+    suspend fun postTier(@Body req: TierRequest): TierResponse
 }

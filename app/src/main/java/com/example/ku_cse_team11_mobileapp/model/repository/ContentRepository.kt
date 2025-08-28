@@ -4,12 +4,16 @@ import com.example.ku_cse_team11_mobileapp.api.model.ContentDetail
 import com.example.ku_cse_team11_mobileapp.api.model.ContentSummary
 import com.example.ku_cse_team11_mobileapp.api.model.PageResponse
 import com.example.ku_cse_team11_mobileapp.api.model.RankResponse
+import com.example.ku_cse_team11_mobileapp.api.model.TierResponse
 import com.example.ku_cse_team11_mobileapp.model.community.ContentComment
 
 interface ContentRepository {
     suspend fun getRanks(type: String, platform: String, limit: Int? = null): List<ContentSummary>
-    suspend fun getContentDetail(contentId: Int, lang: String? = null): ContentDetail
-
+    suspend fun getContentDetail(
+        contentId: Int,
+        lang: String? = null,
+        memberId: Long? = null
+    ): ContentDetail
     suspend fun search(
         keyword: String? = null,
         contentType: String? = null,
@@ -25,4 +29,6 @@ interface ContentRepository {
     suspend fun addComment(contentId: Int, userId: Long, body: String): ContentComment
 
     suspend fun getFavoriteCount(contentId: Int): Int
+    suspend fun postTier(contentId: Int, memberId: Long, tier: String): TierResponse
+
 }

@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 
 class ContentDetailViewModel(
     private val repo: ContentRepository,
-    private val contentId: Int
+    private val contentId: Int,
+    private val defaultLang: String? = "kr"
 ) : ViewModel() {
 
     sealed interface UiState {
@@ -23,25 +24,26 @@ class ContentDetailViewModel(
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState
-
-    init { load() }
-
-    fun load(lang: String? = "kr") {
+    /** memberId가 나중에 도착해도 다시 로드할 수 있게 분리 */
+    fun load(memberId: Long?, lang: String? = defaultLang) { // ← Int? ➜ Long?
         viewModelScope.launch {
-            runCatching { repo.getContentDetail(contentId, lang) }
+            _uiState.value = UiState.Loading
+            runCatching { repo.getContentDetail(contentId, lang, memberId) }
                 .onSuccess { _uiState.value = UiState.Success(it) }
-                .onFailure { _uiState.value = UiState.Error(it.message ?: "알 수 없는 오류") }
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "오류") }
         }
     }
 
     // 수동 팩토리
     class Factory(
         private val repo: ContentRepository,
-        private val contentId: Int
+        private val contentId: Int,
+        private val lang: String? = "kr"
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ContentDetailViewModel(repo, contentId) as T
+            require(modelClass.isAssignableFrom(ContentDetailViewModel::class.java))
+            return ContentDetailViewModel(repo, contentId, lang) as T
         }
     }
 }

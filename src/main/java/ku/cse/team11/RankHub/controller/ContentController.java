@@ -83,6 +83,7 @@ public class ContentController {
             ratingMap.put("A", tierListRepository.countByContentIdAndTier(contentId, Tier.A));
             ratingMap.put("B", tierListRepository.countByContentIdAndTier(contentId, Tier.B));
             ratingMap.put("C", tierListRepository.countByContentIdAndTier(contentId, Tier.C));
+            ratingMap.put("F", tierListRepository.countByContentIdAndTier(contentId, Tier.F));
             ratingMap.put("D", tierListRepository.countByContentIdAndTier(contentId, Tier.D));
             stats.put("rating", ratingMap);
         }

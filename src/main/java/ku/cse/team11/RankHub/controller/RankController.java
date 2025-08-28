@@ -52,6 +52,5 @@ public class RankController {
             return ResponseEntity.ok(rows);
         }
         return ResponseEntity.ok(translateService.translateRankResponses(rows, lang));
-
     }
 }

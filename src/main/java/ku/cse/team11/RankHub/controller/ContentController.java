@@ -2,9 +2,12 @@ package ku.cse.team11.RankHub.controller;
 
 import ku.cse.team11.RankHub.domain.content.Content;
 import ku.cse.team11.RankHub.domain.content.ContentRepository;
+import ku.cse.team11.RankHub.domain.content.ContentService;
+import ku.cse.team11.RankHub.domain.content.ContentType;
 import ku.cse.team11.RankHub.domain.tier.*;
 import ku.cse.team11.RankHub.domain.translation.TranslateService;
 import ku.cse.team11.RankHub.dto.auth.ContentDetailResponse;
+import ku.cse.team11.RankHub.dto.auth.ContentDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +18,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 @RestController
@@ -27,6 +32,8 @@ public class ContentController {
 
     private final TierStatsRepository tierStatsRepository;
     private final TierListRepository tierListRepository;
+
+    private final ContentService contentService;
 
     @GetMapping("/{contentId}")
     public ContentDetailResponse getContentById(
@@ -143,5 +150,21 @@ public class ContentController {
         if (v.isEmpty()) return null;
         if (v.equalsIgnoreCase("kr")) return "ko";
         return v.toLowerCase(); // "en", "ko", "ja", "zh-cn" 등
+    }
+
+    @GetMapping("/sorted")
+    public ResponseEntity<List<Map<String, Object>>> getContentsByTier(
+            @RequestParam ContentType contentType
+    ) {
+        List<ContentDto> contents = contentService.getContentsByTier(contentType);
+
+        List<Map<String, Object>> response = IntStream.range(0, contents.size())
+                .mapToObj(i -> Map.of(
+                        "rank", i + 1,
+                        "content", contents.get(i)
+                ))
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 }

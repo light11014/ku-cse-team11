@@ -1,5 +1,6 @@
 package ku.cse.team11.RankHub.domain.tier;
 
+import ku.cse.team11.RankHub.domain.content.ContentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Arrays;

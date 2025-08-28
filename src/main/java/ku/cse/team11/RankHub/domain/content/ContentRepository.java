@@ -1,5 +1,6 @@
 package ku.cse.team11.RankHub.domain.content;
 
+import ku.cse.team11.RankHub.dto.auth.ContentDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ContentRepository extends JpaRepository<Content, Long> {
@@ -35,5 +37,22 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
             @Param("maxEpisode") Integer maxEpisode,
             Pageable pageable
     );
+
+    @Query(value = """
+        SELECT c.id,
+               c.title,
+               c.authors,
+               c.thumbnail_url AS thumbnailUrl,
+               c.platform,
+               c.views,
+               c.likes,
+               c.language,
+               ts.avg_tier AS tier
+        FROM content c
+        JOIN tier_stats ts ON c.id = ts.content_id
+        WHERE c.content_type = :contentType
+        ORDER BY ts.avg_score DESC
+    """, nativeQuery = true)
+    List<Object[]> findContentsWithTier(@Param("contentType") String contentType);
 
 }

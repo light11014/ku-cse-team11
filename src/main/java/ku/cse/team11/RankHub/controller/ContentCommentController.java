@@ -2,6 +2,7 @@ package ku.cse.team11.RankHub.controller;
 
 import ku.cse.team11.RankHub.domain.comment.ContentComment;
 import ku.cse.team11.RankHub.domain.comment.ContentCommentRepository;
+import ku.cse.team11.RankHub.dto.ContentCommentView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +22,9 @@ public class ContentCommentController {
     // [GET] 컨텐츠의 전체 코멘트 조회
     // GET /content/{contentId}/comments
     @GetMapping("/content/{contentId}/comments")
-    public ResponseEntity<List<CommentResponse>> listByContentId(@PathVariable Long contentId) {
-        List<ContentComment> rows = commentRepository.findByContentIdOrderByCreatedAtDesc(contentId);
-        List<CommentResponse> result = rows.stream()
-                .map(CommentResponse::from)
-                .toList();
-        return ResponseEntity.ok(result);
+    public ResponseEntity<List<ContentCommentView>> listByContentId(@PathVariable Long contentId) {
+        List<ContentCommentView> rows = commentRepository.findViewsByContentId(contentId);
+        return ResponseEntity.ok(rows);
     }
 
     // [POST] 코멘트 생성 (쿼리 파라미터: userId, body)

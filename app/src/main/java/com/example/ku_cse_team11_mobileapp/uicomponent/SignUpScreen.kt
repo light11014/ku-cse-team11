@@ -28,12 +28,12 @@ fun SignUpScreen(
     Scaffold(topBar = { TopAppBar(title = { Text("회원가입") }) }) { inner ->
         Column(Modifier.padding(inner).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(
-                value = ui.loginId, onValueChange = vm::updateLoginId,
-                label = { Text("아이디") }, singleLine = true, modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
                 value = ui.name, onValueChange = vm::updateName,
                 label = { Text("이름") }, singleLine = true, modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = ui.loginId, onValueChange = vm::updateLoginId,
+                label = { Text("아이디") }, singleLine = true, modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = ui.password, onValueChange = vm::updatePassword,

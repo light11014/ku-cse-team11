@@ -69,4 +69,12 @@ class ContentRepositoryImpl(
         val req = TierRequest(contentId = contentId, memberId = memberId, tier = tier)
         return api.postTier(req)
     }
+
+    override suspend fun getTierSorted(contentType: String, platform: String?): List<ContentSummary> {
+        // 서버가 platform 필터를 지원하면 서버에서 필터됨.
+        // 지원 안 해도 아래 클라 필터로 커버.
+        val list = api.getTierSorted(contentType, platform).map { it.content }
+        return if (platform.isNullOrBlank() || platform.equals("ALL", true)) list
+        else list.filter { it.platform.equals(platform, ignoreCase = true) }
+    }
 }

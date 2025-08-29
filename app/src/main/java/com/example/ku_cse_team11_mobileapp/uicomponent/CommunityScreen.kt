@@ -168,7 +168,6 @@ fun CommunityScreen(
                     items(s.visibleItems, key = { it.id }) { c ->
                         CommentCard(
                             author = "작성자 #${c.memberName}",
-                            time = formatTime(c.createdAt),
                             body = c.body
                         )
                     }
@@ -186,7 +185,7 @@ fun CommunityScreen(
 }
 
 @Composable
-private fun CommentCard(author: String, time: String, body: String) {
+private fun CommentCard(author: String, body: String) {
     ElevatedCard {
         Column(Modifier
             .fillMaxWidth()
@@ -196,16 +195,9 @@ private fun CommentCard(author: String, time: String, body: String) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(author, fontWeight = FontWeight.Medium)
-                Text(time, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(8.dp))
             Text(body, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         }
     }
 }
-
-@RequiresApi(Build.VERSION_CODES.O)
-private fun formatTime(raw: String?): String =
-    runCatching {
-        OffsetDateTime.parse(raw ?: return "방금").format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-    }.getOrElse { raw ?: "방금" }

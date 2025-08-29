@@ -2,6 +2,7 @@ package com.example.ku_cse_team11_mobileapp.uicomponent
 
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -24,37 +25,28 @@ fun MainScreen(
     navController: NavHostController
 ) {
     Scaffold(
+        // 시스템 인셋으로 가로/아래쪽까지 여백 생기는 것 방지
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
-                title = { Text("콘텐츠") },
+                title = { Text("Union") },
                 actions = {
                     IconButton(onClick = { navController.navigate("search") }) {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = "검색"
-                        )
+                        Icon(Icons.Filled.Search, contentDescription = "검색")
                     }
                     IconButton(onClick = { navController.navigate("mypage") }) {
-                        Icon(
-                            imageVector = Icons.Filled.AccountCircle,
-                            contentDescription = "마이페이지"
-                        )
+                        Icon(Icons.Filled.AccountCircle, contentDescription = "마이페이지")
                     }
                 }
             )
         }
     ) { inner ->
-        // 본문: 중앙에 ContentNodeList
-        Box(
+        // TopAppBar 높이만 패딩 적용 (좌/우/하 없음)
+        ContentNodeList(
+            navController = navController,
             modifier = Modifier
-                .padding(inner)
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            ContentNodeList(
-                navController = navController,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+                .fillMaxSize()
+                .padding(top = inner.calculateTopPadding())
+        )
     }
 }

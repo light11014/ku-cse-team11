@@ -5,8 +5,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -24,6 +26,15 @@ fun LoginScreen(
 
     Scaffold(topBar = { TopAppBar(title = { Text("로그인") }) }) { inner ->
         Column(Modifier.padding(inner).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Union",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 4.dp),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.ExtraBold
+            )
             OutlinedTextField(
                 value = ui.loginId, onValueChange = vm::updateLoginId,
                 label = { Text("아이디") }, singleLine = true, modifier = Modifier.fillMaxWidth()

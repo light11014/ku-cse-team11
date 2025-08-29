@@ -125,7 +125,7 @@ fun ContentDetailScreen(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(220.dp)
+                                .height(500.dp)
                                 .clip(RoundedCornerShape(12.dp))
                         )
                     }
@@ -235,6 +235,19 @@ fun ContentDetailScreen(
                     item { SectionCard(title = "메타데이터") { KeyValueRows(metaRows) } }
 
                     // ✅ 티어 요약(내 티어는 즉시 반영: myTier 사용)
+
+                    // ✅ 티어 분포(옵티미스틱 반영)
+                    item {
+                        SectionCard(title = "티어 분포") {
+                            TierBarChart(
+                                rating = displayRating,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(196.dp)
+                                    .padding(top = 8.dp)
+                            )
+                        }
+                    }
                     item {
                         SectionCard(title = "티어 요약") {
                             FlowRow(
@@ -249,18 +262,6 @@ fun ContentDetailScreen(
                         }
                     }
 
-                    // ✅ 티어 분포(옵티미스틱 반영)
-                    item {
-                        SectionCard(title = "티어 분포") {
-                            TierBarChart(
-                                rating = displayRating,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(196.dp)
-                                    .padding(top = 8.dp)
-                            )
-                        }
-                    }
 
                     // ✅ 티어 선택(선택 즉시 myTier 반영 + 서버 전송)
                     item {
@@ -289,7 +290,7 @@ fun ContentDetailScreen(
                         }
                     }
 
-                    item { Spacer(Modifier.height(8.dp)) }
+                    item { Spacer(Modifier.height(150.dp)) }
                 }
             }
         }
@@ -468,12 +469,9 @@ private fun optimisticRatingMap(
     curr: Tier
 ): Map<String, Int> {
     fun k(t: Tier) = when (t) {
-        Tier.UNKNOWN -> "UNKNOWN"
         else -> t.name
     }
     val m = original.toMutableMap()
-    if (prev != Tier.UNKNOWN) m[k(prev)] = (m[k(prev)] ?: 0).coerceAtLeast(1) - 1
-    if (curr != Tier.UNKNOWN) m[k(curr)] = (m[k(curr)] ?: 0) + 1
     return m
 }
 
@@ -525,4 +523,4 @@ private fun TierBadgeLarge(
 }
 
 fun parseTier(s: String?): Tier =
-    Tier.entries.firstOrNull { it.name.equals(s ?: "", true) } ?: Tier.UNKNOWN
+    Tier.entries.firstOrNull { it.name.equals(s ?: "", true) } ?: Tier.S

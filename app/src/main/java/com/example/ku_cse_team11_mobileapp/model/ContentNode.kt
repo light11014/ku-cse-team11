@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -127,7 +128,8 @@ fun ContentNode(
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(bottom = 46.dp, end = 8.dp) // 스크림 위 여백
+                    .padding(end = 8.dp)
+                    .offset(y = (-60).dp) // 스크림 위 여백
                     .background(
                         color = Color.Black.copy(alpha = 0.55f),
                         shape = RoundedCornerShape(10.dp)
@@ -141,8 +143,9 @@ fun ContentNode(
                     tint = Color.White,
                     modifier = Modifier.size(16.dp)
                 )
+
                 Text(
-                    text = compactCount(content.views),
+                    text = if (content.views != 0L) compactCount(content.views) else "-",
                     color = Color.White,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(start = 4.dp, end = 8.dp)

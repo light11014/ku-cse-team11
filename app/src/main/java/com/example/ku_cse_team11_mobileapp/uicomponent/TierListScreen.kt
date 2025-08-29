@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.saveable.rememberSaveable
 
-enum class Tier(val label: String) { S("S"), A("A"), B("B"), C("C"), D("D"),F("F"), UNKNOWN("Unknown") }
+enum class Tier(val label: String) { S("S"), A("A"), B("B"), C("C"), D("D"),F("F")}
 @Composable
 fun TierSelector(
     selected: Tier,
@@ -21,34 +21,23 @@ fun TierSelector(
     Column(modifier = modifier) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Tier.entries.forEach { t ->
-                FilterChip(
-                    selected = (t == selected),
-                    onClick = { onSelect(t) },
-                    label = { Text(t.label) },
-                    leadingIcon = {
-                        Box(
-                            Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(colorForTier(t))
-                        )
-                    }
-                )
+                if (t.label != "UNKNOWN"){
+                    FilterChip(
+                        selected = (t == selected),
+                        onClick = { onSelect(t) },
+                        label = { Text(t.label) },
+                        leadingIcon = {
+                            Box(
+                                Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(colorForTier(t))
+                            )
+                        }
+                    )
+                }
             }
         }
-        Spacer(Modifier.height(3.dp))
-        AssistChip(
-            onClick = {},
-            label = { Text("현재 선택: ${selected.label}") },
-            leadingIcon = {
-                Box(
-                    Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(colorForTier(selected))
-                )
-            }
-        )
     }
 }
 
@@ -61,5 +50,4 @@ private fun colorForTier(t: Tier): Color = when (t) {
     Tier.C -> Color(0xFF9B59B6)      // 보라
     Tier.D -> Color(0xFFE67E22)      // 오렌지
     Tier.F -> Color(0xFFE74C3C)      // 레드
-    Tier.UNKNOWN -> Color(0xFF95A5A6) // 그레이
 }

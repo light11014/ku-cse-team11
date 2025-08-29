@@ -30,5 +30,5 @@ interface ContentRepository {
 
     suspend fun getFavoriteCount(contentId: Int): Int
     suspend fun postTier(contentId: Int, memberId: Long, tier: String): TierResponse
-
+    suspend fun getTierSorted(contentType: String, platform: String? = null): List<ContentSummary>
 }

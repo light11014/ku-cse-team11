@@ -6,6 +6,7 @@ import com.example.ku_cse_team11_mobileapp.api.model.PageResponse
 import com.example.ku_cse_team11_mobileapp.api.model.RankResponse
 import com.example.ku_cse_team11_mobileapp.api.model.TierRequest
 import com.example.ku_cse_team11_mobileapp.api.model.TierResponse
+import com.example.ku_cse_team11_mobileapp.api.model.TierSortedItem
 import com.example.ku_cse_team11_mobileapp.model.community.ContentComment
 import okhttp3.ResponseBody
 import retrofit2.http.Body
@@ -63,4 +64,10 @@ interface ContentApi {
     ): ResponseBody
     @POST("api/tier")
     suspend fun postTier(@Body req: TierRequest): TierResponse
+
+    @GET("api/content/sorted")
+    suspend fun getTierSorted(
+        @Query("contentType") contentType: String,
+        @Query("platform") platform: String? = null   // ✅ 추가
+    ): List<TierSortedItem>
 }
